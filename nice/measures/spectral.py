@@ -1,8 +1,7 @@
-from .base import BaseMeasure
-from ..externals.h5io import write_hdf5, read_hdf5
+from .base import BaseMeasure, _read_measure
 
 import numpy as np
-from mne.time_frequency import compute_epochs_psd 
+from mne.time_frequency import compute_epochs_psd
 
 
 class PowerSpectralDensity(BaseMeasure):
@@ -40,29 +39,10 @@ class PowerSpectralDensity(BaseMeasure):
         self.freqs_ = freqs
         self.unit_ = unit
 
-    def save(self, fname):
-        write_hdf5(
-            fname,
-            vars(self),
-            title=_get_title(self.__class__, self.comment))
+    def reduction(self):
+        # XXX spectral summaries
+        pass
 
 
 def read_psd(fname, comment='default'):
-    data = read_hdf5(
-        fname,  _get_title(PowerSpectralDensity, comment))
-    out = PowerSpectralDensity(**{k: v for k, v in data.items() if not 
-                                  k.endswith('_')})
-    for k, v in data.items():
-        if k.endswith('_'):
-            setattr(out, k, v)
-    return out
-
-
-def _get_title(klass, comment):
-    if 'measure' in klass.__module__:
-        kind = 'measure'
-    else:
-        raise NotImplementedError('Oh no-- what is this?')
-    
-    return '/'.join([
-        kind, klass.__name__, comment])
+    return _read_measure(PowerSpectralDensity, fname, comment=comment)

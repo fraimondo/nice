@@ -22,6 +22,7 @@ from mne.externals.six.moves import zip, cPickle as pickle
 
 # our imports
 from nice.measures import PowerSpectralDensity, read_psd
+from nice.measures import ContingentNegativeVariation, read_cnv
 
 matplotlib.use('Agg')  # for testing don't use X server
 
@@ -52,20 +53,31 @@ def _get_data():
 clean_warning_registry()  # really clean warning stack
 
 
-def test_spectral():
-    """Test computation of spectral measures"""
-    tpm = _TempDir()
-    epochs = _get_data()[:2]
-    psd = PowerSpectralDensity(1, 4)
-    psd.fit(epochs)
-    psd.save(tpm + '/test.hdf5')
-    psd2 = read_psd(tpm + '/test.hdf5')
-    for k, v in vars(psd).items():
-        v2 = getattr(psd2, k)
+def _base_io_test(inst, epochs, read_fun):
+    tmp = _TempDir()
+    inst.fit(epochs)
+    inst.save(tmp + '/test.hdf5')
+    inst2 = read_fun(tmp + '/test.hdf5')
+    for k, v in vars(inst).items():
+        v2 = getattr(inst2, k)
         if isinstance(v, np.ndarray):
             assert_array_equal(v, v2)
         else:
             assert_equal(v, v2)
+
+
+def test_spectral():
+    """Test computation of spectral measures"""
+    epochs = _get_data()[:2]
+    psd = PowerSpectralDensity(1, 4)
+    _base_io_test(psd, epochs, read_psd)
+
+
+def test_time_locked():
+    """Test computation of spectral measures"""
+    epochs = _get_data()[:2]
+    cnv = ContingentNegativeVariation()
+    _base_io_test(cnv, epochs, read_cnv)
 
 
 if __name__ == "__main__":
