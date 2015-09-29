@@ -1,8 +1,6 @@
-from .base import BaseMeasure, _read_measure
-from ..externals.h5io import write_hdf5, read_hdf5
+from .base import (
+    BaseMeasure, BaseEventRelated, _read_measure, _check_epochs_consistency)
 from ..recipes.time_locked import epochs_compute_cnv
-
-import numpy as np
 
 
 class ContingentNegativeVariation(BaseMeasure):
@@ -22,13 +20,11 @@ def read_cnv(fname, comment='default'):
     return _read_measure(ContingentNegativeVariation, fname, comment=comment)
 
 
-
 class EventRelatedTopography(BaseEventRelated):
     """docstring for ERP"""
 
-    def __init__(self, arg):
+    def __init__(self, tmin, tmax, summary=np.mean):
         pass
-
 
 
 class EventRelatedContrast(BaseEventRelated):
@@ -40,7 +36,7 @@ class EventRelatedContrast(BaseEventRelated):
 
 def read_ert(fname, epochs, comment='default'):
     out = _read_measure(EventRelatedTopography, fname, comment=comment)
-    out.data_ = _check_epochs_consistency(out, epochs)
+    out.data_ = _check_epochs_consistency(out.epochs_info_, epochs)
     return out
 
 

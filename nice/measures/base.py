@@ -2,7 +2,7 @@ from ..externals.h5io import write_hdf5, read_hdf5
 
 import numpy as np
 
-from mne.epochs import _check_epochs_infos
+from mne.epochs import _compare_epochs_infos
 import h5py
 
 
@@ -25,7 +25,7 @@ class BaseMeasure(object):
 class BaseEventRelated(BaseMeasure):
 
     def fit(self, epochs):
-        self.epochs_ = epochs
+        self.epochs_info_ = epochs.info1
 
     def save(self, fname):
         save_vars = vars(self)
@@ -72,7 +72,7 @@ def _read_measure(klass, fname, comment='default'):
     return out
 
 
-def _check_epochs_consitency(epochs1, epochs2):
-    _check_epochs_infos(epochs1.info1, epochs2.info, 2)
+def _check_epochs_consistency(epochs1, epochs2):
+    _compare_epochs_infos(epochs1.info1, epochs2.info, 2)
     np.assert_equal(epochs1.get_data(), epochs2.get_data())
     return epochs2
