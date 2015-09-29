@@ -38,7 +38,7 @@ def epochs_compute_komplexity(epochs, nbins, backend='python',
         elapsed_time = time.time() - start_time
         logger.info("Elapsed time {} sec".format(elapsed_time))
     elif backend == 'openmp':
-        from .ompk import komplexity as _ompk_k
+        from ..optimizations.ompk import komplexity as _ompk_k
         nthreads = (method_params['nthreads']
                     if 'nthreads' in method_params else 1)
         start_time = time.time()

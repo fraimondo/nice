@@ -10,7 +10,7 @@ from nice import utils
 from nice.algorithms.information_theory import epochs_compute_komplexity
 from nice.algorithms.information_theory.komplexity import (_komplexity_python,
                                                            _symb_python)
-from nice.algorithms.information_theory import ompk as ompk
+from nice.algorithms.optimizations import ompk
 
 n_epochs = 3
 

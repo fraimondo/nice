@@ -2,7 +2,7 @@
 
 
 WSMI_DIR=nice/wsmi/wsmi_c
-OMPK_DIR=nice/algorithms/information_theory/komplexity_c
+OMPK_DIR=nice/algorithms/optimizations/komplexity_c
 
 # all: wsmi ompk
 all: ompk
