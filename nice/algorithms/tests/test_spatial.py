@@ -3,8 +3,8 @@ import os.path as op
 import numpy as np
 from scipy import io as sio
 
-from numpy.testing import assert_array_equal, assert_almost_equal
-from nose.tools import assert_raises, assert_equal
+from numpy.testing import assert_almost_equal
+from nose.tools import assert_equal
 
 from nice.utils import create_mock_data_egi
 from nice.algorithms.spatial import epochs_compute_csd
