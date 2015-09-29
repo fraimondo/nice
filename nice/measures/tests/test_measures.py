@@ -1,24 +1,16 @@
 # License: BSD (3-clause)
 
 import os.path as op
-from copy import deepcopy
 
-from nose.tools import (assert_true, assert_equal, assert_raises,
-                        assert_not_equal)
+from nose.tools import assert_equal
 
-from numpy.testing import (assert_array_equal, assert_array_almost_equal,
-                           assert_allclose)
+from numpy.testing import assert_array_equal
 import numpy as np
-import copy as cp
 import warnings
-from scipy import fftpack
 import matplotlib
 
 import mne
 from mne.utils import _TempDir, clean_warning_registry
-
-from mne.externals.six import text_type
-from mne.externals.six.moves import zip, cPickle as pickle
 
 # our imports
 from nice.measures import PowerSpectralDensity, read_psd

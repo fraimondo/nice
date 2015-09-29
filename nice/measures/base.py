@@ -1,5 +1,10 @@
 from ..externals.h5io import write_hdf5, read_hdf5
 
+import numpy as np
+
+from mne.epochs import _check_epochs_infos
+import h5py
+
 
 class BaseMeasure(object):
     """Base class for M/EEG measures"""
@@ -10,15 +15,33 @@ class BaseMeasure(object):
             vars(self),
             title=_get_title(self.__class__, self.comment))
 
-    def fit(self):
+    def fit(self, epochs):
         pass
 
     def transform(self):
         pass
 
 
-class BaseAverage(BaseMeasure):
-    pass
+class BaseEventRelated(BaseMeasure):
+
+    def fit(self, epochs):
+        self.epochs_ = epochs
+
+    def save(self, fname):
+        save_vars = vars(self)
+        has_epochs = False
+        with h5py.File(fname) as h5fid:
+            if 'nice/data/epochs' not in h5fid:
+                has_epochs = True
+
+        if not has_epochs:
+            write_hdf5(fname, vars(save_vars.pop('epochs_')),
+                       title='nice/data/epochs')
+
+        write_hdf5(
+            fname,
+            save_vars,
+            title=_get_title(self.__class__, self.comment))
 
 
 class BaseSpectral(BaseMeasure):
@@ -36,7 +59,7 @@ def _get_title(klass, comment):
         raise NotImplementedError('Oh no-- what is this?')
 
     return '/'.join([
-        kind, klass.__name__, comment])
+        'nice', kind, klass.__name__, comment])
 
 
 def _read_measure(klass, fname, comment='default'):
@@ -47,3 +70,9 @@ def _read_measure(klass, fname, comment='default'):
         if k.endswith('_'):
             setattr(out, k, v)
     return out
+
+
+def _check_epochs_consitency(epochs1, epochs2):
+    _check_epochs_infos(epochs1.info1, epochs2.info, 2)
+    np.assert_equal(epochs1.get_data(), epochs2.get_data())
+    return epochs2
