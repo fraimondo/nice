@@ -150,7 +150,7 @@ def test_wsmi():
 
     # Test wsmi across backends
     wsmi_1, smi_1, sym_1, count_1 = epochs_compute_wsmi(epochs, kernel=3, tau=8,
-                                                        backend='parakeet')
+                                                        backend='python')
     mp = {'nthreads': 1}
     wsmi_2, smi_2, sym_2, count_2 = epochs_compute_wsmi(epochs, kernel=3, tau=8,
                                                         backend='openmp',
@@ -163,7 +163,7 @@ def test_wsmi():
 
     epochs.drop_epochs([0])
     wsmi_3, smi_3, sym_3, count_3 = epochs_compute_wsmi(epochs, kernel=3, tau=8,
-                                                        backend='parakeet')
+                                                        backend='python')
     mp.update(nthreads=1)
     wsmi_4, smi_4, sym_4, count_4 = epochs_compute_wsmi(epochs, kernel=3, tau=8,
                                                         backend='openmp',
@@ -175,7 +175,7 @@ def test_wsmi():
 
     # Test with more threads
     wsmi_1, smi_1, sym_1, count_1 = epochs_compute_wsmi(epochs, kernel=3, tau=8,
-                                                        backend='parakeet')
+                                                        backend='python')
     mp.update(nthreads=14)
     wsmi_2, smi_2, sym_2, count_2 = epochs_compute_wsmi(epochs, kernel=3, tau=8,
                                                         backend='openmp',
@@ -188,7 +188,7 @@ def test_wsmi():
 
     epochs.drop_epochs([0])
     wsmi_3, smi_3, sym_3, count_3 = epochs_compute_wsmi(epochs, kernel=3, tau=8,
-                                                        backend='parakeet')
+                                                        backend='python')
     mp.update(nthreads=3)
     wsmi_4, smi_4, sym_4, count_4 = epochs_compute_wsmi(epochs, kernel=3, tau=8,
                                                         backend='openmp',

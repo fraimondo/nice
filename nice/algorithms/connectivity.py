@@ -30,7 +30,7 @@ def epochs_compute_wsmi(epochs, kernel, tau, backend='python',
         Overrides default parameters.
         OpenMP specific {'nthreads'}
     backend : {'python', 'openmp'}
-        The backend to be used. Defaults to 'parakeet'.
+        The backend to be used. Defaults to 'pytho'.
     """
     if method_params is None:
         method_params = {}
@@ -47,13 +47,13 @@ def epochs_compute_wsmi(epochs, kernel, tau, backend='python',
 
     fdata = np.transpose(np.array(
         np.split(filtfilt(b, a, data), n_epochs, axis=1)), [1, 2, 0])
-    if backend == 'parakeet':
+    if backend == 'python':
         from .information_theory.permutation_entropy import _symb_python
         logger.info("Performing symbolic transformation")
         sym, count = _symb_python(fdata, kernel, tau)
         nsym = count.shape[1]
         wts = _get_weights_matrix(nsym)
-        logger.info("Running wsmi with parakeet...")
+        logger.info("Running wsmi with python...")
         wsmi, smi = _wsmi_python(sym, count, wts)
     elif backend == 'openmp':
         from .optimizations.jivaro import wsmi as jwsmi

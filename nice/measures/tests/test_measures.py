@@ -17,6 +17,8 @@ from mne.utils import _TempDir, clean_warning_registry
 from nice.measures import PowerSpectralDensity, read_psd
 from nice.measures import ContingentNegativeVariation, read_cnv
 from nice.measures import Komplexity, read_komplexity
+from nice.measures import PermutationEntropy, read_pe
+from nice.measures import WSMI, read_wsmi
 
 from nice.measures import EventRelatedTopography, read_ert
 
@@ -111,6 +113,18 @@ def test_komplexity():
     epochs = _get_data()[:2]
     komp = Komplexity()
     _base_io_test(komp, epochs, read_komplexity)
+
+def test_pe():
+    """Test computation of permutation entropy measure"""
+    epochs = _get_data()[:2]
+    pe = PermutationEntropy()
+    _base_io_test(pe, epochs, read_pe)
+
+def test_wsmi():
+    """Test computation of wsmi measure"""
+    epochs = _get_data()[:2]
+    wsmi = WSMI()
+    _base_io_test(wsmi, epochs, read_wsmi)
 
 if __name__ == "__main__":
     import nose
