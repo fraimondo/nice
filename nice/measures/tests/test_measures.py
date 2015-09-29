@@ -74,10 +74,10 @@ def _base_io_test(inst, epochs, read_fun):
     _compare_instance(inst, inst2)
 
 
-def _erfp_io_test(tmp, inst, epochs, read_fun):
+def _erfp_io_test(tmp, inst, epochs, read_fun, comment='default'):
     inst.fit(epochs)
     inst.save(tmp + '/test.hdf5')
-    inst2 = read_fun(tmp + '/test.hdf5', epochs)
+    inst2 = read_fun(tmp + '/test.hdf5', epochs, comment=comment)
     assert_array_equal(inst.epochs_.get_data(), inst2.epochs_.get_data())
     _compare_instance(inst, inst2)
 
@@ -90,7 +90,7 @@ def test_spectral():
 
 
 def test_time_locked():
-    """Test computation of spectral measures"""
+    """Test computation of time lockedi measures"""
 
     epochs = _get_data()[:2]
     cnv = ContingentNegativeVariation()
@@ -105,8 +105,16 @@ def test_time_locked():
         assert_true('nice/data/epochs' in fid)
 
     tmp = _TempDir()
+    with h5py.File(tmp + '/test.hdf5') as fid:
+        assert_true('nice/data/epochs' not in fid)
     erc = EventRelatedContrast(0.1, 0.2, 'a', 'b')
     _erfp_io_test(tmp, erc, epochs, read_erc)
+    with h5py.File(tmp + '/test.hdf5') as fid:
+        assert_true('nice/data/epochs' in fid)
+    erc = EventRelatedContrast(0.1, 0.3, 'a', 'b', comment='another_erp')
+    _erfp_io_test(tmp, erc, epochs, read_erc, comment='another_erp')
+    with h5py.File(tmp + '/test.hdf5') as fid:
+        assert_true('nice/data/epochs' in fid)
 
 def test_komplexity():
     """Test computation of komplexity measure"""

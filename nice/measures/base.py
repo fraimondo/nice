@@ -2,6 +2,7 @@ from ..externals.h5io import write_hdf5, read_hdf5
 
 import numpy as np
 
+from mne.utils import logger
 from mne.epochs import _compare_epochs_infos
 from mne.io.meas_info import Info
 import h5py
@@ -38,9 +39,12 @@ class BaseEventRelated(BaseMeasure):
         with h5py.File(fname) as h5fid:
             if 'nice/data/epochs' in h5fid:
                 has_epochs = True
+                logger.info('Epochs already present in HDF5 file, '
+                            'will not be overwritten')
 
         epochs = self.epochs_
         if not has_epochs:
+            logger.info('Writing epochs to HDF5 file')
             epochs_vars = {k: v for k, v in vars(epochs).items() if not
                            (k.startswith('_') or k != '_data')}
             write_hdf5(fname, epochs_vars,
