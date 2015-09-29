@@ -15,6 +15,7 @@ from mne.utils import _TempDir, clean_warning_registry
 # our imports
 from nice.measures import PowerSpectralDensity, read_psd
 from nice.measures import ContingentNegativeVariation, read_cnv
+from nice.measures import Komplexity, read_komplexity
 
 matplotlib.use('Agg')  # for testing don't use X server
 
@@ -71,6 +72,12 @@ def test_time_locked():
     cnv = ContingentNegativeVariation()
     _base_io_test(cnv, epochs, read_cnv)
 
+
+def test_komplexity():
+    """Test computation of komplexity measure"""
+    epochs = _get_data()[:2]
+    komp = Komplexity()
+    _base_io_test(komp, epochs, read_komplexity)
 
 if __name__ == "__main__":
     import nose

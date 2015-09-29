@@ -48,12 +48,6 @@ def epochs_compute_komplexity(epochs, nbins, backend='python',
     else:
         raise ValueError('backend %s not supported for Komplexity'
                          % backend)
-
-    picked_info = pick_info(epochs.info, picks)
-    ev_copy = epochs.events.copy()
-    evid_copy = deepcopy(epochs.event_id)
-    komp = EpochsArray(komp[None].T, picked_info, ev_copy, tmin=0,
-                       event_id=evid_copy)
     return komp
 
 

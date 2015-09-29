@@ -108,9 +108,9 @@ def test_komplexity_omp():
 
 def test_komplexity():
     """ test komplexity metric """
-    k1 = epochs_compute_komplexity(epochs, backend='python')
-    k2 = epochs_compute_komplexity(epochs, backend='openmp')
-    assert_array_equal(k1.get_data(), k2.get_data())
+    k1 = epochs_compute_komplexity(epochs, nbins=32, backend='python')
+    k2 = epochs_compute_komplexity(epochs, nbins=32, backend='openmp')
+    assert_array_equal(k1, k2)
 
 if __name__ == "__main__":
     import nose

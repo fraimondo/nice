@@ -12,6 +12,7 @@ class Komplexity(BaseMeasure):
         self.nbins = nbins
         self.backend = backend
         self.method_params = method_params
+        self.comment = comment
 
     def fit(self, epochs):
         komp = epochs_compute_komplexity(epochs, self.nbins, self.backend,
