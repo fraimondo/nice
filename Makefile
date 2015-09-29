@@ -1,22 +1,20 @@
-.PHONY: all clean wsmi ompk clean-wsmi clean-ompk
+.PHONY: all clean jivaro ompk clean-jivaro clean-ompk
 
+JIVARO_DIR=nice/algorithms/optimizations/jivaro
+OMPK_DIR=nice/algorithms/optimizations/ompk
 
-WSMI_DIR=nice/wsmi/wsmi_c
-OMPK_DIR=nice/algorithms/optimizations/komplexity_c
+all: jivaro ompk
 
-# all: wsmi ompk
-all: ompk
-
-wsmi:
-	$(MAKE) -C $(WSMI_DIR)
+jivaro:
+	$(MAKE) -C $(JIVARO_DIR)
 
 ompk:
 	$(MAKE) -C $(OMPK_DIR)
 
-clean: clean-wsmi clean-ompk
+clean: clean-jivaro clean-ompk
 
-clean-wsmi:
-	$(MAKE) -C $(WSMI_DIR) clean
+clean-jivaro:
+	$(MAKE) -C $(JIVARO_DIR) clean
 
 clean-ompk:
 	$(MAKE) -C $(OMPK_DIR) clean
