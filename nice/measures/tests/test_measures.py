@@ -2,7 +2,7 @@
 
 import os.path as op
 
-from nose.tools import assert_equal
+from nose.tools import assert_equal, assert_true
 
 from numpy.testing import assert_array_equal
 import numpy as np
@@ -10,12 +10,17 @@ import warnings
 import matplotlib
 
 import mne
+import h5py
 from mne.utils import _TempDir, clean_warning_registry
 
 # our imports
 from nice.measures import PowerSpectralDensity, read_psd
 from nice.measures import ContingentNegativeVariation, read_cnv
 from nice.measures import Komplexity, read_komplexity
+
+from nice.measures import EventRelatedTopography, read_ert
+
+from nice.measures import EventRelatedContrast, read_erc
 
 matplotlib.use('Agg')  # for testing don't use X server
 
@@ -27,7 +32,7 @@ event_name = op.join(base_dir, 'test-eve.fif')
 evoked_nf_name = op.join(base_dir, 'test-nf-ave.fif')
 
 event_id, tmin, tmax = 1, -0.2, 0.5
-event_id_2 = 2
+event_id_2 = {'a': 1, 'b': 2}
 preload = True
 
 
@@ -46,17 +51,33 @@ def _get_data():
 clean_warning_registry()  # really clean warning stack
 
 
+def _compare_instance(inst1, inst2):
+    for k, v in vars(inst1).items():
+        v2 = getattr(inst2, k)
+        if k == 'epochs_info_' and v2 is None:
+            continue
+        if isinstance(v, np.ndarray):
+            assert_array_equal(v, v2)
+        elif isinstance(v, mne.io.meas_info.Info):
+            pass
+        else:
+            assert_equal(v, v2)
+
+
 def _base_io_test(inst, epochs, read_fun):
     tmp = _TempDir()
     inst.fit(epochs)
     inst.save(tmp + '/test.hdf5')
     inst2 = read_fun(tmp + '/test.hdf5')
-    for k, v in vars(inst).items():
-        v2 = getattr(inst2, k)
-        if isinstance(v, np.ndarray):
-            assert_array_equal(v, v2)
-        else:
-            assert_equal(v, v2)
+    _compare_instance(inst, inst2)
+
+
+def _erfp_io_test(tmp, inst, epochs, read_fun):
+    inst.fit(epochs)
+    inst.save(tmp + '/test.hdf5')
+    inst2 = read_fun(tmp + '/test.hdf5', epochs)
+    assert_array_equal(inst.epochs_.get_data(), inst2.epochs_.get_data())
+    _compare_instance(inst, inst2)
 
 
 def test_spectral():
@@ -68,10 +89,22 @@ def test_spectral():
 
 def test_time_locked():
     """Test computation of spectral measures"""
+
     epochs = _get_data()[:2]
     cnv = ContingentNegativeVariation()
     _base_io_test(cnv, epochs, read_cnv)
 
+    tmp = _TempDir()
+    with h5py.File(tmp + '/test.hdf5') as fid:
+        assert_true('nice/data/epochs' not in fid)
+    ert = EventRelatedTopography(0.1, 0.2)
+    _erfp_io_test(tmp, ert, epochs, read_ert)
+    with h5py.File(tmp + '/test.hdf5') as fid:
+        assert_true('nice/data/epochs' in fid)
+
+    tmp = _TempDir()
+    erc = EventRelatedContrast(0.1, 0.2, 'a', 'b')
+    _erfp_io_test(tmp, erc, epochs, read_erc)
 
 def test_komplexity():
     """Test computation of komplexity measure"""

@@ -3,6 +3,7 @@ from ..externals.h5io import write_hdf5, read_hdf5
 import numpy as np
 
 from mne.epochs import _compare_epochs_infos
+from mne.io.meas_info import Info
 import h5py
 
 
@@ -25,22 +26,28 @@ class BaseMeasure(object):
 class BaseEventRelated(BaseMeasure):
 
     def fit(self, epochs):
-        self.epochs_info_ = epochs.info1
+        self.epochs_info_ = epochs.info
+        self.shape_ = epochs.get_data().shape
+        self.epochs_ = epochs
+        self.data_ = epochs.get_data()
 
     def save(self, fname):
-        save_vars = vars(self)
+        save_vars = {k: v for k, v in vars(self).items() if
+                     k not in ['data_', 'epochs_']}
         has_epochs = False
         with h5py.File(fname) as h5fid:
-            if 'nice/data/epochs' not in h5fid:
+            if 'nice/data/epochs' in h5fid:
                 has_epochs = True
 
+        epochs = self.epochs_
         if not has_epochs:
-            write_hdf5(fname, vars(save_vars.pop('epochs_')),
+            epochs_vars = {k: v for k, v in vars(epochs).items() if not
+                           (k.startswith('_') or k != '_data')}
+            write_hdf5(fname, epochs_vars,
                        title='nice/data/epochs')
 
         write_hdf5(
-            fname,
-            save_vars,
+            fname, save_vars,
             title=_get_title(self.__class__, self.comment))
 
 
@@ -63,16 +70,18 @@ def _get_title(klass, comment):
 
 
 def _read_measure(klass, fname, comment='default'):
-    data = read_hdf5(
-        fname,  _get_title(klass, comment))
-    out = klass(**{k: v for k, v in data.items() if not k.endswith('_')})
-    for k, v in data.items():
+    data = read_hdf5(fname,  _get_title(klass, comment))
+    init_params = {k: v for k, v in data.items() if not k.endswith('_')}
+    attrs = {k: v for k, v in data.items() if k.endswith('_')}
+    if 'epochs_info_' in attrs:
+        attrs['epochs_info_'] = Info(attrs['epochs_info_'])
+    out = klass(**init_params)
+    for k, v in attrs.items():
         if k.endswith('_'):
             setattr(out, k, v)
     return out
 
 
-def _check_epochs_consistency(epochs1, epochs2):
-    _compare_epochs_infos(epochs1.info1, epochs2.info, 2)
-    np.assert_equal(epochs1.get_data(), epochs2.get_data())
-    return epochs2
+def _check_epochs_consistency(info1, info2, shape1, shape2):
+    _compare_epochs_infos(info1, info2, 2)
+    np.testing.assert_array_equal(shape1, shape2)

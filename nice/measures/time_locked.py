@@ -1,7 +1,6 @@
 from .base import (
     BaseMeasure, BaseEventRelated, _read_measure, _check_epochs_consistency)
 
-import numpy as np
 from ..recipes.time_locked import epochs_compute_cnv
 
 
@@ -25,26 +24,42 @@ def read_cnv(fname, comment='default'):
 class EventRelatedTopography(BaseEventRelated):
     """docstring for ERP"""
 
-    def __init__(self, tmin, tmax, summary_function=np.mean):
+    def __init__(self, tmin, tmax, summary_function='np.mean',
+                 comment='default'):
         self.tmin = tmin
         self.tmax = tmax
-        self.summary_function
+        self.summary_function = summary_function
+        self.comment = comment
 
 
 class EventRelatedContrast(BaseEventRelated):
     """docstring for ERP"""
 
-    def __init__(self, ):
-        pass
+    def __init__(self, tmin, tmax, condition_a, condition_b,
+                 summary_function='np.mean', comment='default'):
+        self.tmin = tmin
+        self.tmax = tmax
+        self.summary_function = summary_function
+        self.condition_a = condition_a
+        self.condition_b = condition_b
+        self.comment = comment
 
 
 def read_ert(fname, epochs, comment='default'):
     out = _read_measure(EventRelatedTopography, fname, comment=comment)
-    out.data_ = _check_epochs_consistency(out.epochs_info_, epochs)
+    shape1 = epochs.get_data().shape
+    shape2 = out.shape_
+    _check_epochs_consistency(out.epochs_info_, epochs.info, shape1, shape2)
+    out.epochs_ = epochs
+    out.data_ = epochs.get_data()
     return out
 
 
 def read_erc(fname, epochs, comment='default'):
     out = _read_measure(EventRelatedContrast, fname, comment=comment)
-    out.data_ = _check_epochs_consistency(out, epochs)
+    shape1 = epochs.get_data().shape
+    shape2 = out.shape_
+    _check_epochs_consistency(out.epochs_info_, epochs.info, shape1, shape2)
+    out.epochs_ = epochs
+    out.data_ = epochs.get_data()
     return out
