@@ -1,5 +1,7 @@
 from .base import (
     BaseMeasure, BaseEventRelated, _read_measure, _check_epochs_consistency)
+
+import numpy as np
 from ..recipes.time_locked import epochs_compute_cnv
 
 
@@ -23,14 +25,16 @@ def read_cnv(fname, comment='default'):
 class EventRelatedTopography(BaseEventRelated):
     """docstring for ERP"""
 
-    def __init__(self, tmin, tmax, summary=np.mean):
-        pass
+    def __init__(self, tmin, tmax, summary_function=np.mean):
+        self.tmin = tmin
+        self.tmax = tmax
+        self.summary_function
 
 
 class EventRelatedContrast(BaseEventRelated):
     """docstring for ERP"""
 
-    def __init__(self, arg):
+    def __init__(self, ):
         pass
 
 
