@@ -46,7 +46,7 @@ class BaseEventRelated(BaseMeasure):
         if not has_epochs:
             logger.info('Writing epochs to HDF5 file')
             epochs_vars = {k: v for k, v in vars(epochs).items() if not
-                           (k.startswith('_') or k != '_data')}
+                           (k.startswith('_') or k != 'data_')}
             write_hdf5(fname, epochs_vars,
                        title='nice/data/epochs')
 

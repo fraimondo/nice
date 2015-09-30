@@ -30,7 +30,7 @@ def epochs_compute_komplexity(epochs, nbins, backend='python',
         method_params = {}
 
     data = epochs.get_data()[:, picks if picks is not None else Ellipsis]
-    logger.info("Running Komplexity")
+    logger.info("Running KolmogorovComplexity")
 
     if backend == 'python':
         start_time = time.time()
@@ -46,7 +46,7 @@ def epochs_compute_komplexity(epochs, nbins, backend='python',
         elapsed_time = time.time() - start_time
         logger.info("Elapsed time {} sec".format(elapsed_time))
     else:
-        raise ValueError('backend %s not supported for Komplexity'
+        raise ValueError('backend %s not supported for KolmogorovComplexity'
                          % backend)
     return komp
 

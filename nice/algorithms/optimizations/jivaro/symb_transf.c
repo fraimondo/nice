@@ -112,7 +112,7 @@ int symb_transf(
 	 * asign each one of them a unique value.
 	 */
 	nsymbols = 0;
-	/* SMI and WSMI parameters */
+	/* SMI and SymbolicMutualInformation parameters */
 	n_total_symbols = 1;
     for (int c = 1; c <= kernel; c++) {
 		n_total_symbols = n_total_symbols * c;

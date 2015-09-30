@@ -3,7 +3,7 @@ from ..algorithms.information_theory import (epochs_compute_komplexity,
                                              epochs_compute_pe)
 
 
-class Komplexity(BaseMeasure):
+class KolmogorovComplexity(BaseMeasure):
     """docstring for ContingentNegativeVariation"""
 
     def __init__(self, backend="python", nbins=32, method_params=None,
@@ -24,7 +24,7 @@ class Komplexity(BaseMeasure):
 
 
 def read_komplexity(fname, comment='default'):
-    return _read_measure(Komplexity, fname, comment=comment)
+    return _read_measure(KolmogorovComplexity, fname, comment=comment)
 
 
 class PermutationEntropy(BaseMeasure):

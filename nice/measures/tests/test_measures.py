@@ -16,9 +16,9 @@ from mne.utils import _TempDir, clean_warning_registry
 # our imports
 from nice.measures import PowerSpectralDensity, read_psd
 from nice.measures import ContingentNegativeVariation, read_cnv
-from nice.measures import Komplexity, read_komplexity
+from nice.measures import KolmogorovComplexity, read_komplexity
 from nice.measures import PermutationEntropy, read_pe
-from nice.measures import WSMI, read_wsmi
+from nice.measures import SymbolicMutualInformation, read_wsmi
 
 from nice.measures import EventRelatedTopography, read_ert
 
@@ -116,11 +116,13 @@ def test_time_locked():
     with h5py.File(tmp + '/test.hdf5') as fid:
         assert_true('nice/data/epochs' in fid)
 
+
 def test_komplexity():
     """Test computation of komplexity measure"""
     epochs = _get_data()[:2]
-    komp = Komplexity()
+    komp = KolmogorovComplexity()
     _base_io_test(komp, epochs, read_komplexity)
+
 
 def test_pe():
     """Test computation of permutation entropy measure"""
@@ -128,10 +130,11 @@ def test_pe():
     pe = PermutationEntropy()
     _base_io_test(pe, epochs, read_pe)
 
+
 def test_wsmi():
     """Test computation of wsmi measure"""
     epochs = _get_data()[:2]
-    wsmi = WSMI()
+    wsmi = SymbolicMutualInformation()
     _base_io_test(wsmi, epochs, read_wsmi)
 
 if __name__ == "__main__":

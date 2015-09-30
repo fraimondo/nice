@@ -47,7 +47,7 @@ int smi(
 		int nthreads
 	) {
 
-	printf("WSMI:: Running @(%p, %p) dims (%d, %d, %d) nsym %d and storing in %p and %p\n",
+	printf("SymbolicMutualInformation:: Running @(%p, %p) dims (%d, %d, %d) nsym %d and storing in %p and %p\n",
 	(void *)data, (void *)count, nchannels, nsamples, ntrials, nsymbols, (void *)mi, (void *)wmi);
 
 	/* Temporal working matrix for each thread*/

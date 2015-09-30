@@ -57,7 +57,7 @@ static PyObject * ompk_komplexity(PyObject *self, PyObject *args) {
 	int all_trial_result = do_process_all_trials(c_data, nsamples, nchannels, ntrials, c_results, nbins, nthreads);
 
 	if (all_trial_result != 0) {
-		PyErr_SetString(ompkError, "Unable to compute Komplexity ");
+		PyErr_SetString(ompkError, "Unable to compute KolmogorovComplexity ");
 	}
 
 
@@ -86,7 +86,7 @@ static PyObject * ompk_komplexity(PyObject *self, PyObject *args) {
 }
 
 static PyMethodDef OmpkMethods[] = {
-	{"komplexity",  ompk_komplexity, METH_VARARGS, "The Komplexity of the given matrix across second dimension"},
+	{"komplexity",  ompk_komplexity, METH_VARARGS, "The KolmogorovComplexity of the given matrix across second dimension"},
 	{NULL, NULL, 0, NULL}
 };
 
