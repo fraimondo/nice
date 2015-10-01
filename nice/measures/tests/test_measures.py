@@ -102,7 +102,7 @@ def test_time_locked():
     ert = EventRelatedTopography(0.1, 0.2)
     _erfp_io_test(tmp, ert, epochs, read_ert)
     with h5py.File(tmp + '/test.hdf5') as fid:
-        assert_true('nice/data/epochs' in fid)
+        assert_true(fid['nice/data/epochs'].keys() != [])
 
     tmp = _TempDir()
     with h5py.File(tmp + '/test.hdf5') as fid:
@@ -114,7 +114,7 @@ def test_time_locked():
     erc = EventRelatedContrast(0.1, 0.3, 'a', 'b', comment='another_erp')
     _erfp_io_test(tmp, erc, epochs, read_erc, comment='another_erp')
     with h5py.File(tmp + '/test.hdf5') as fid:
-        assert_true('nice/data/epochs' in fid)
+        assert_true(fid['nice/data/epochs'].keys() != [])
 
 
 def test_komplexity():

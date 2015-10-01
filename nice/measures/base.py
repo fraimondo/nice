@@ -1,5 +1,5 @@
 from ..externals.h5io import write_hdf5, read_hdf5
-
+from ..utils import write_hdf5_mne_epochs
 import numpy as np
 
 from mne.utils import logger
@@ -23,8 +23,15 @@ class BaseMeasure(object):
     def transform(self):
         pass
 
+    def _get_title(self):
+        return _get_title(self.__class__, self.comment)
 
-class BaseEventRelated(BaseMeasure):
+    @classmethod
+    def _read(cls, fname, comment='default'):
+        return _read_measure(cls, fname, comment=comment)
+
+
+class BaseEventRelated(object):
 
     def fit(self, epochs):
         self.epochs_info_ = epochs.info
@@ -42,25 +49,21 @@ class BaseEventRelated(BaseMeasure):
                 logger.info('Epochs already present in HDF5 file, '
                             'will not be overwritten')
 
-        epochs = self.epochs_
         if not has_epochs:
+            epochs = self.epochs_
             logger.info('Writing epochs to HDF5 file')
-            epochs_vars = {k: v for k, v in vars(epochs).items() if not
-                           (k.startswith('_') or k != 'data_')}
-            write_hdf5(fname, epochs_vars,
-                       title='nice/data/epochs')
-
+            write_hdf5_mne_epochs(fname, epochs)
         write_hdf5(
             fname, save_vars,
             title=_get_title(self.__class__, self.comment))
 
+    @classmethod
+    def _read(cls, fname, epochs, comment='default'):
+        return _read_event_related(cls, fname=fname, epochs=epochs,
+                                   comment=comment)
 
-class BaseSpectral(BaseMeasure):
-    pass
-
-
-class BaseConnectivity(BaseMeasure):
-    pass
+    def _get_title(self):
+        return _get_title(self.__class__, self.comment)
 
 
 def _get_title(klass, comment):
@@ -89,3 +92,13 @@ def _read_measure(klass, fname, comment='default'):
 def _check_epochs_consistency(info1, info2, shape1, shape2):
     _compare_epochs_infos(info1, info2, 2)
     np.testing.assert_array_equal(shape1, shape2)
+
+
+def _read_event_related(cls, fname, epochs, comment='default'):
+    out = _read_measure(cls, fname, comment=comment)
+    shape1 = epochs.get_data().shape
+    shape2 = out.shape_
+    _check_epochs_consistency(out.epochs_info_, epochs.info, shape1, shape2)
+    out.epochs_ = epochs
+    out.data_ = epochs.get_data()
+    return out

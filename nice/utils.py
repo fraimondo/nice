@@ -2,10 +2,12 @@ import os.path as op
 
 import numpy as np
 from scipy.io import loadmat
+import h5py
 
 from mne import create_info
 from mne.channels import read_montage
 from mne.io import RawArray
+from .externals.h5io import write_hdf5
 
 
 def create_mock_data_egi(n_channels, n_samples, stim=True):
@@ -46,3 +48,26 @@ def create_mock_data_egi(n_channels, n_samples, stim=True):
     raw.set_montage(montage)
     info['description'] = 'geodesic256'
     return raw
+
+
+def h5_listdir(fname, max_depth=4):
+
+    datasets = list()
+
+    def _get_dataset(name, member):
+        if isinstance(member, h5py.Dataset):
+            name_ = '/'.join(name.split('/', max_depth)[:-1])
+            if name_ not in datasets:
+                datasets.append(name_)
+
+    with h5py.File(fname, 'r') as fid:
+        fid.visititems(_get_dataset)
+
+    return datasets
+
+
+def write_hdf5_mne_epochs(fname, epochs):
+    epochs_vars = {k: v for k, v in vars(epochs).items() if
+                   not k.startswith('_') or k == '_data'}
+    write_hdf5(fname, epochs_vars,
+               title='nice/data/epochs')

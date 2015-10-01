@@ -45,4 +45,4 @@ class PowerSpectralDensity(BaseMeasure):
 
 
 def read_psd(fname, comment='default'):
-    return _read_measure(PowerSpectralDensity, fname, comment=comment)
+    return PowerSpectralDensity._read(fname, comment=comment)
