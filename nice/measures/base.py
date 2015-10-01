@@ -18,10 +18,12 @@ class BaseMeasure(object):
             title=_get_title(self.__class__, self.comment))
 
     def fit(self, epochs):
-        pass
+        self._fit(epochs)
+        return self
 
-    def transform(self):
-        pass
+    def transform(self, epochs):
+        self._transform(epochs)
+        return self
 
     def _get_title(self):
         return _get_title(self.__class__, self.comment)
@@ -38,6 +40,7 @@ class BaseEventRelated(object):
         self.shape_ = epochs.get_data().shape
         self.epochs_ = epochs
         self.data_ = epochs.get_data()
+        return self
 
     def save(self, fname):
         save_vars = {k: v for k, v in vars(self).items() if

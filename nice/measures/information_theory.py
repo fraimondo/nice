@@ -1,4 +1,4 @@
-from .base import BaseMeasure, _read_measure
+from .base import BaseMeasure
 from ..algorithms.information_theory import (epochs_compute_komplexity,
                                              epochs_compute_pe)
 
@@ -16,7 +16,7 @@ class KolmogorovComplexity(BaseMeasure):
         self.method_params = method_params
         self.comment = comment
 
-    def fit(self, epochs):
+    def _fit(self, epochs):
         komp = epochs_compute_komplexity(epochs, nbins=self.nbins,
                                          backend=self.backend,
                                          method_params=self.method_params)
@@ -24,7 +24,7 @@ class KolmogorovComplexity(BaseMeasure):
 
 
 def read_komplexity(fname, comment='default'):
-    return _read_measure(KolmogorovComplexity, fname, comment=comment)
+    return KolmogorovComplexity._read_measure(fname, comment=comment)
 
 
 class PermutationEntropy(BaseMeasure):
@@ -36,11 +36,11 @@ class PermutationEntropy(BaseMeasure):
         self.backend = backend
         self.comment = comment
 
-    def fit(self, epochs):
+    def _fit(self, epochs):
         pe, _ = epochs_compute_pe(epochs, kernel=self.kernel, tau=self.tau,
                                   backend=self.backend)
         self.data_ = pe
 
 
 def read_pe(fname, comment='default'):
-    return _read_measure(PermutationEntropy, fname, comment=comment)
+    return PermutationEntropy._read_measure(fname, comment=comment)

@@ -13,7 +13,7 @@ class Features(OrderedDict):
     def __init__(self, measures):
         OrderedDict.__init__(self)
         for meas in measures:
-            self[meas._get_title()] = meas
+            self.add_measure(meas)
 
     def fit(self, epochs):
         for meas in self.values():
@@ -26,6 +26,9 @@ class Features(OrderedDict):
         write_hdf5(fname, self.keys(), title='nice/features/order')
         for meas in self.values():
             meas.save(fname)
+
+    def add_measure(self, measure):
+        self[measure._get_title()] = measure
 
 
 def read_features(fname):

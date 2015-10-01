@@ -1,5 +1,4 @@
-from .base import (
-    BaseMeasure, BaseEventRelated, _read_measure, _check_epochs_consistency)
+from .base import BaseMeasure, BaseEventRelated
 
 from ..recipes.time_locked import epochs_compute_cnv
 
@@ -12,13 +11,13 @@ class ContingentNegativeVariation(BaseMeasure):
         self.tmax = tmax
         self.comment = comment
 
-    def fit(self, epochs):
+    def _fit(self, epochs):
         cnv = epochs_compute_cnv(epochs, self.tmin, self.tmax)
         self.data_ = cnv
 
 
 def read_cnv(fname, comment='default'):
-    return _read_measure(ContingentNegativeVariation, fname, comment=comment)
+    return ContingentNegativeVariation._read(fname, comment=comment)
 
 
 class EventRelatedTopography(BaseEventRelated):
@@ -30,6 +29,10 @@ class EventRelatedTopography(BaseEventRelated):
         self.tmax = tmax
         self.summary_function = summary_function
         self.comment = comment
+
+
+def read_ert(fname, epochs, comment='default'):
+    return EventRelatedTopography._read(fname, epochs=epochs, comment=comment)
 
 
 class EventRelatedContrast(BaseEventRelated):
@@ -45,21 +48,5 @@ class EventRelatedContrast(BaseEventRelated):
         self.comment = comment
 
 
-def read_ert(fname, epochs, comment='default'):
-    out = _read_measure(EventRelatedTopography, fname, comment=comment)
-    shape1 = epochs.get_data().shape
-    shape2 = out.shape_
-    _check_epochs_consistency(out.epochs_info_, epochs.info, shape1, shape2)
-    out.epochs_ = epochs
-    out.data_ = epochs.get_data()
-    return out
-
-
 def read_erc(fname, epochs, comment='default'):
-    out = _read_measure(EventRelatedContrast, fname, comment=comment)
-    shape1 = epochs.get_data().shape
-    shape2 = out.shape_
-    _check_epochs_consistency(out.epochs_info_, epochs.info, shape1, shape2)
-    out.epochs_ = epochs
-    out.data_ = epochs.get_data()
-    return out
+    return EventRelatedContrast._read(fname, epochs=epochs, comment=comment)

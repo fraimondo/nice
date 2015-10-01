@@ -1,4 +1,4 @@
-from .base import BaseMeasure, _read_measure
+from .base import BaseMeasure
 
 import numpy as np
 from mne.time_frequency import compute_epochs_psd
@@ -18,7 +18,7 @@ class PowerSpectralDensity(BaseMeasure):
         self.n_fft = n_fft
         self.comment = comment
 
-    def fit(self, epochs):
+    def _fit(self, epochs):
         # XXX XXX XXX (porny triple triple XXX)
         # check n_fft VS segment size in final MNE implementation ping @agramfort + yousra
         # XXX XXX XXX (porny triple triple XXX)

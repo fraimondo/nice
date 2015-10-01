@@ -1,4 +1,4 @@
-from .base import BaseMeasure, _read_measure
+from .base import BaseMeasure
 from ..algorithms.connectivity import epochs_compute_wsmi
 
 
@@ -16,12 +16,13 @@ class SymbolicMutualInformation(BaseMeasure):
         self.comment = comment
         self.method = method
 
-    def fit(self, epochs):
+    def _fit(self, epochs):
         wsmi, smi, _, _ = epochs_compute_wsmi(epochs, kernel=self.kernel,
                                               tau=self.tau,
                                               backend=self.backend,
                                               method_params=self.method_params)
         self.data_ = wsmi if self.method == 'weighted' else smi
 
+
 def read_wsmi(fname, comment='default'):
-    return _read_measure(SymbolicMutualInformation, fname, comment=comment)
+    return SymbolicMutualInformation._read(fname, comment=comment)
