@@ -24,7 +24,7 @@ class KolmogorovComplexity(BaseMeasure):
 
 
 def read_komplexity(fname, comment='default'):
-    return KolmogorovComplexity._read_measure(fname, comment=comment)
+    return KolmogorovComplexity._read(fname, comment=comment)
 
 
 class PermutationEntropy(BaseMeasure):
@@ -43,4 +43,4 @@ class PermutationEntropy(BaseMeasure):
 
 
 def read_pe(fname, comment='default'):
-    return PermutationEntropy._read_measure(fname, comment=comment)
+    return PermutationEntropy._read(fname, comment=comment)

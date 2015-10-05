@@ -22,7 +22,7 @@ class BaseMeasure(object):
         if not has_ch_info:
             ch_info = self.ch_info_
             logger.info('Writing channel info to HDF5 file')
-            write_hdf5(fname, ch_info, title='nice/data/ch_info_')
+            write_hdf5(fname, ch_info, title='nice/data/ch_info')
 
     def _get_save_vars(self, exclude):
         return {k: v for k, v in vars(self).items() if
@@ -80,7 +80,7 @@ class BaseEventRelated(BaseMeasure):
 
     def save(self, fname):
         self._save_info(fname)
-        save_vars = self.get_save_vars(
+        save_vars = self._get_save_vars(
             exclude=['ch_info_', 'data_', 'epochs_'])
 
         has_epochs = False
