@@ -56,7 +56,7 @@ clean_warning_registry()  # really clean warning stack
 def _compare_instance(inst1, inst2):
     for k, v in vars(inst1).items():
         v2 = getattr(inst2, k)
-        if k == 'epochs_info_' and v2 is None:
+        if k == 'ch_info_' and v2 is None:
             continue
         if isinstance(v, np.ndarray):
             assert_array_equal(v, v2)
