@@ -26,9 +26,9 @@ class SymbolicMutualInformation(BaseMeasure):
     @property
     def _axis_map(self):
         return {
-            'epochs': 0,
-            'channels': 1,
-            'channels_y': 2,
+            'channels': 0,
+            'channels_y': 1,
+            'epochs': 2,
         }
 
 
