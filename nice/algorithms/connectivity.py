@@ -1,4 +1,5 @@
 import numpy as np
+import mne
 from mne.utils import logger, verbose
 from scipy.signal import butter, filtfilt
 
@@ -37,7 +38,9 @@ def epochs_compute_wsmi(epochs, kernel, tau, backend='python',
 
     freq = epochs.info['sfreq']
 
-    data = epochs.get_data()
+    picks = mne.io.pick.pick_types(epochs.info, meg=True, eeg=True)
+
+    data = epochs.get_data()[:, picks, ...]
     n_epochs = len(data)
 
     filter_freq = np.double(freq) / kernel / tau

@@ -25,8 +25,8 @@ class KolmogorovComplexity(BaseMeasure):
     @property
     def _axis_map(self):
         return {
-            'epochs': 0,
-            'channels': 1
+            'channels': 0,
+            'epochs': 1,
         }
 
 
@@ -51,8 +51,8 @@ class PermutationEntropy(BaseMeasure):
     @property
     def _axis_map(self):
         return {
-            'epochs': 0,
-            'channels': 1
+            'channels': 0,
+            'epochs': 1,
         }
 
 

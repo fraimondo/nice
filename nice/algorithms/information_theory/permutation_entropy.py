@@ -3,6 +3,7 @@ import numpy as np
 from itertools import permutations
 from scipy.signal import butter, filtfilt
 
+import mne
 from mne.utils import logger, verbose
 
 
@@ -23,7 +24,9 @@ def epochs_compute_pe(epochs, kernel, tau, backend='python', verbose=None):
     """
     freq = epochs.info['sfreq']
 
-    data = epochs.get_data()
+    picks = mne.io.pick.pick_types(epochs.info, meg=True, eeg=True)
+
+    data = epochs.get_data()[:, picks, ...]
     n_epochs = len(data)
 
     filter_freq = np.double(freq) / kernel / tau

@@ -82,19 +82,33 @@ def _erfp_io_test(tmp, inst, epochs, read_fun, comment='default'):
     _compare_instance(inst, inst2)
 
 
+def _base_reduction_test(inst, epochs):
+    sc = inst.reduce_to_scalar(None)
+    if inst.data_.ndim == 3:
+        sc2 = np.mean(np.mean(np.mean(inst.data_, axis=0), axis=0), axis=0)
+    else:
+        sc2 = np.mean(np.mean(inst.data_, axis=0), axis=0)
+    assert_equal(sc, sc2)
+    topo = inst.reduce_to_topo(None)
+    topo_chans = len(mne.io.pick.pick_types(epochs.info, meg=True, eeg=True))
+    assert_equal(topo.shape, (topo_chans,))
+
+
 def test_spectral():
     """Test computation of spectral measures"""
     epochs = _get_data()[:2]
     psd = PowerSpectralDensity(1, 4)
     _base_io_test(psd, epochs, read_psd)
+    _base_reduction_test(psd, epochs)
 
 
 def test_time_locked():
-    """Test computation of time lockedi measures"""
+    """Test computation of time locked measures"""
 
     epochs = _get_data()[:2]
     cnv = ContingentNegativeVariation()
     _base_io_test(cnv, epochs, read_cnv)
+    _base_reduction_test(cnv, epochs)
 
     tmp = _TempDir()
     with h5py.File(tmp + '/test.hdf5') as fid:
@@ -122,6 +136,7 @@ def test_komplexity():
     epochs = _get_data()[:2]
     komp = KolmogorovComplexity()
     _base_io_test(komp, epochs, read_komplexity)
+    _base_reduction_test(komp, epochs)
 
 
 def test_pe():
@@ -129,6 +144,7 @@ def test_pe():
     epochs = _get_data()[:2]
     pe = PermutationEntropy()
     _base_io_test(pe, epochs, read_pe)
+    _base_reduction_test(pe, epochs)
 
 
 def test_wsmi():
@@ -136,6 +152,8 @@ def test_wsmi():
     epochs = _get_data()[:2]
     wsmi = SymbolicMutualInformation()
     _base_io_test(wsmi, epochs, read_wsmi)
+    _base_reduction_test(wsmi, epochs)
+
 
 if __name__ == "__main__":
     import nose
