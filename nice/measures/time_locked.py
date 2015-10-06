@@ -62,10 +62,9 @@ class EventRelatedContrast(BaseEventRelated):
     """docstring for ERP"""
 
     def __init__(self, tmin, tmax, condition_a, condition_b,
-                 summary_function='np.mean', comment='default'):
+                 comment='default'):
         self.tmin = tmin
         self.tmax = tmax
-        self.summary_function = summary_function
         self.condition_a = condition_a
         self.condition_b = condition_b
         self.comment = comment
