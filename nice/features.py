@@ -15,11 +15,21 @@ class Features(OrderedDict):
         OrderedDict.__init__(self)
         for meas in measures:
             self.add_measure(meas)
+        if self._check_measures_fit():
+            self.ch_info_ = self.values()[0].ch_info_
 
     def fit(self, epochs):
-        self.info_ = epochs.info
         for meas in self.values():
             meas.fit(epochs)
+        self.ch_info_ = self.values()[0].ch_info_
+
+    def _check_measures_fit(self):
+        is_fit = True
+        for meas in self.values():
+            if not hasattr(meas, 'ch_info_'):
+                is_fit = False
+                break
+        return is_fit
 
     def reduce_to_topo(self, measure_params, picks=None):
         if picks:  # XXX think if info is needed down-stream

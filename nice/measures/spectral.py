@@ -6,7 +6,7 @@ from mne.time_frequency import compute_epochs_psd
 
 class PowerSpectralDensity(BaseMeasure):
     """docstring for PSD"""
-    
+
     def __init__(self, fmin=0, fmax=np.inf, n_fft=256, n_overlap=0,
                  normalize=False, dB=True, n_jobs=1, comment='default'):
         self.fmin = fmin
@@ -17,10 +17,16 @@ class PowerSpectralDensity(BaseMeasure):
         self.n_overlap = n_overlap
         self.n_fft = n_fft
         self.comment = comment
+        self._axis_map = {
+            'epochs': 0,
+            'channels': 1,
+            'frequency': 2,
+        }
 
     def _fit(self, epochs):
         # XXX XXX XXX (porny triple triple XXX)
-        # check n_fft VS segment size in final MNE implementation ping @agramfort + yousra
+        # check n_fft VS segment size in final MNE implementation ping
+        # @agramfort + yousra
         # XXX XXX XXX (porny triple triple XXX)
         psds, freqs = compute_epochs_psd(
             epochs=epochs, fmin=self.fmin, fmax=self.fmax,
@@ -38,10 +44,6 @@ class PowerSpectralDensity(BaseMeasure):
         self.data_ = psds
         self.freqs_ = freqs
         self.unit_ = unit
-
-    def reduction(self):
-        # XXX spectral summaries
-        pass
 
 
 def read_psd(fname, comment='default'):

@@ -52,9 +52,9 @@ class BaseMeasure(object):
         if not hasattr(self, 'data_'):
             raise ValueError('You did not fit me. Do it again after fitting '
                              'some data!')
-        out = self.get_picked_data(picks)
-        for axis, func in self._expand_reduction(reduction_func, target):
-            out = func(out, axis=axis)
+        out, funcs = self._prepare_reduction(reduction_func, target, picks)
+        for func in funcs:
+            out = func(out, axis=0)
         return out
 
     def reduce_to_topo(self, reduction_func, picks=None):
@@ -63,6 +63,37 @@ class BaseMeasure(object):
 
     def reduce_to_scalar(self, reduction_func, picks=None):
         return self._reduce_to(reduction_func, target='scalar', picks=picks)
+
+    def _prepare_reduction(self, reduction_func, target, picks):
+        data = self.data_
+        if picks is not None:
+            ch_axis = self._axis_map['channels']
+            data = (data.swapaxes(ch_axis, 0)[picks, ...]
+                        .swapaxes(0, ch_axis))
+        _axis_map = self._axis_map
+        funcs = list()
+        if target == 'topography':
+            ch_axis = _axis_map.pop('channels')
+
+        permutation_list = list()
+        if reduction_func is None:
+            for remaining_axis in _axis_map.values():
+                permutation_list.append(remaining_axis)
+                funcs.append(np.mean)
+        elif len(reduction_func) == len(_axis_map):
+            for rec in reduction_func:
+                this_axis = _axis_map.pop(rec['axis'])
+                permutation_list.append(this_axis)
+                funcs.append(rec['function'])
+        else:
+            raise ValueError('Run `python -c "import this"` to see '
+                             'why we will not tolerate these things')
+
+        if target == 'topography':
+            permutation_list.append(ch_axis)
+
+        data = np.transpose(data, permutation_list)
+        return data, funcs
 
     @classmethod
     def _read(cls, fname, comment='default'):
