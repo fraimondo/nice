@@ -2,7 +2,7 @@ import numpy as np
 from scipy import linalg
 
 import mne
-from mne.io.pick import _picks_by_type
+from mne.io.pick import _picks_by_type, pick_info
 from mne.defaults import _handle_default
 from mne.utils import _time_mask
 
@@ -48,7 +48,8 @@ def epochs_compute_cnv(epochs, tmin=None, tmax=None):
 
     # estimate single trial regression over time samples
     scales = np.zeros(n_channels)
-    for this_type, this_picks in _picks_by_type(epochs.info):
+    info_ = pick_info(epochs.info, picks)
+    for this_type, this_picks in _picks_by_type(info_):
         scales[this_picks] = _handle_default('scalings')[this_type]
 
     for ii, epoch in enumerate(epochs):

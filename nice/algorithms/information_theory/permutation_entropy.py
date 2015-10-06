@@ -4,11 +4,12 @@ from itertools import permutations
 from scipy.signal import butter, filtfilt
 
 import mne
-from mne.utils import logger, verbose
+from mne.utils import logger, verbose, _time_mask
 
 
 @verbose
-def epochs_compute_pe(epochs, kernel, tau, backend='python', verbose=None):
+def epochs_compute_pe(epochs, kernel, tau, tmin=None, tmax=None,
+                      backend='python', verbose=None):
     """Compute Permutation Entropy (PE)
 
     Parameters
@@ -29,13 +30,17 @@ def epochs_compute_pe(epochs, kernel, tau, backend='python', verbose=None):
     data = epochs.get_data()[:, picks, ...]
     n_epochs = len(data)
 
+    data = np.hstack(data)
+
     filter_freq = np.double(freq) / kernel / tau
     logger.info('Filtering  at %.2f Hz' % filter_freq)
     b, a = butter(6, 2.0 * filter_freq / np.double(freq), 'lowpass')
-    data = np.hstack(data[:, Ellipsis])
 
     fdata = np.transpose(np.array(
         np.split(filtfilt(b, a, data), n_epochs, axis=1)), [1, 2, 0])
+
+    time_mask = _time_mask(epochs.times, tmin, tmax)
+    fdata = fdata[:, time_mask, :]
 
     if backend == 'python':
         logger.info("Performing symbolic transformation")
@@ -50,6 +55,7 @@ def epochs_compute_pe(epochs, kernel, tau, backend='python', verbose=None):
     nsym = pe.shape[1]
     pe = pe / np.log(nsym)
     return pe, sym
+
 
 def _define_symbols(kernel):
     result_dict = dict()
@@ -68,6 +74,7 @@ def _define_symbols(kernel):
                 result += [symbol]
     return result
 
+
 # Performs symbolic transformation accross 1st dimension
 def _symb_python(data, kernel, tau):
     """Compute symbolic transform"""
@@ -82,12 +89,11 @@ def _symb_python(data, kernel, tau):
     count_shape[1] = len(symbols)
     count = np.zeros(count_shape, np.int32)
 
-    func = lambda x : symbols.index(''.join(map(str, x)))
-
     for k in range(signal_sym_shape[1]):
         subsamples = range(k, k + kernel * tau, tau)
         ind = np.argsort(data[:, subsamples], 1)
-        signal_sym[:, k, ] = np.apply_along_axis(func, 1, ind)
+        signal_sym[:, k, ] = np.apply_along_axis(
+            lambda x: symbols.index(''.join(map(str, x))), 1, ind)
 
     count = np.double(np.apply_along_axis(
         lambda x: np.bincount(x, minlength=len(symbols)), 1, signal_sym))

@@ -7,8 +7,10 @@ from mne.time_frequency import compute_epochs_psd
 class PowerSpectralDensity(BaseMeasure):
     """docstring for PSD"""
 
-    def __init__(self, fmin=0, fmax=np.inf, n_fft=256, n_overlap=0,
-                 normalize=False, dB=True, n_jobs=1, comment='default'):
+    def __init__(self, tmin=None, tmax=None, fmin=0, fmax=np.inf, n_fft=256,
+                 n_overlap=0, normalize=False, dB=True, n_jobs=1,
+                 comment='default'):
+        BaseMeasure.__init__(self, tmin, tmax, comment)
         self.fmin = fmin
         self.fmax = fmax
         self.normalize = normalize
@@ -16,7 +18,6 @@ class PowerSpectralDensity(BaseMeasure):
         self.n_jobs = n_jobs
         self.n_overlap = n_overlap
         self.n_fft = n_fft
-        self.comment = comment
 
     @property
     def _axis_map(self):
@@ -33,8 +34,8 @@ class PowerSpectralDensity(BaseMeasure):
         # XXX XXX XXX (porny triple triple XXX)
         psds, freqs = compute_epochs_psd(
             epochs=epochs, fmin=self.fmin, fmax=self.fmax,
-            n_jobs=self.n_jobs, n_overlap=self.n_overlap,
-            n_fft=self.n_fft)
+            tmin=self.tmin, tmax=self.tmax, n_jobs=self.n_jobs,
+            n_overlap=self.n_overlap, n_fft=self.n_fft)
         if self.normalize:
             psds /= psds.sum(axis=-1)[..., None]
             assert np.allclose(psds.sum(axis=-1), 1.)

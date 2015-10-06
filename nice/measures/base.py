@@ -11,6 +11,11 @@ import h5py
 class BaseMeasure(object):
     """Base class for M/EEG measures"""
 
+    def __init__(self, tmin, tmax, comment):
+        self.tmin = tmin
+        self.tmax = tmax
+        self.comment = comment
+
     @property
     def _axis_map(self):
         raise NotImplementedError('This should be in every measure')
@@ -109,6 +114,9 @@ class BaseMeasure(object):
 
 
 class BaseEventRelated(BaseMeasure):
+
+    def __init__(self, tmin, tmax, comment):
+        BaseMeasure.__init__(self, tmin, tmax, comment)
 
     def fit(self, epochs):
         self.ch_info_ = epochs.info

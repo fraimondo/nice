@@ -1,6 +1,6 @@
 import numpy as np
 import mne
-from mne.utils import logger, verbose
+from mne.utils import logger, verbose, _time_mask
 from scipy.signal import butter, filtfilt
 
 
@@ -15,8 +15,8 @@ def _get_weights_matrix(nsym):
 
 
 @verbose
-def epochs_compute_wsmi(epochs, kernel, tau, backend='python',
-                        method_params=None, verbose=None):
+def epochs_compute_wsmi(epochs, kernel, tau, tmin=None, tmax=None,
+                        backend='python', method_params=None, verbose=None):
     """Compute weighted mutual symbolic information (wSMI)
 
     Parameters
@@ -46,10 +46,13 @@ def epochs_compute_wsmi(epochs, kernel, tau, backend='python',
     filter_freq = np.double(freq) / kernel / tau
     logger.info('Filtering  at %.2f Hz' % filter_freq)
     b, a = butter(6, 2.0 * filter_freq / np.double(freq), 'lowpass')
-    data = np.hstack(data[:, Ellipsis])
+    data = np.hstack(data)
 
     fdata = np.transpose(np.array(
         np.split(filtfilt(b, a, data), n_epochs, axis=1)), [1, 2, 0])
+
+    time_mask = _time_mask(epochs.times, tmin, tmax)
+    fdata = fdata[:, time_mask, :]
     if backend == 'python':
         from .information_theory.permutation_entropy import _symb_python
         logger.info("Performing symbolic transformation")

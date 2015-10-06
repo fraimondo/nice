@@ -1,15 +1,15 @@
-from copy import deepcopy
 import time
 import numpy as np
 import zlib
 
-from mne import pick_info, pick_types
-from mne.epochs import EpochsArray
-from mne.utils import logger, verbose
+from mne import pick_types
+from mne.utils import logger, verbose, _time_mask
+
 
 @verbose
-def epochs_compute_komplexity(epochs, nbins, backend='python',
-                              method_params=None, verbose=None):
+def epochs_compute_komplexity(epochs, nbins, tmin=None, tmax=None,
+                              backend='python', method_params=None,
+                              verbose=None):
     """Compute complexity (K)
 
     Parameters
@@ -30,6 +30,8 @@ def epochs_compute_komplexity(epochs, nbins, backend='python',
         method_params = {}
 
     data = epochs.get_data()[:, picks if picks is not None else Ellipsis]
+    time_mask = _time_mask(epochs.times, tmin, tmax)
+    data = data[:, :, time_mask]
     logger.info("Running KolmogorovComplexity")
 
     if backend == 'python':
@@ -66,8 +68,8 @@ def _symb_python(signal, nbins):
 
     for i in range(items):
         tbin = int((signal[i] - lower) / bsize)
-        osignal[i] = ((0 if tbin < 0 else maxbin if tbin > maxbin else tbin)
-                      + ord('A'))
+        osignal[i] = ((0 if tbin < 0 else maxbin
+                       if tbin > maxbin else tbin) + ord('A'))
 
     return osignal.tostring()
 
