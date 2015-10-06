@@ -11,6 +11,10 @@ import h5py
 class BaseMeasure(object):
     """Base class for M/EEG measures"""
 
+    @property
+    def _axis_map(self):
+        raise NotImplementedError('This should be in every measure')
+
     def _save_info(self, fname):
         has_ch_info = False
         with h5py.File(fname) as h5fid:
@@ -64,12 +68,16 @@ class BaseMeasure(object):
     def reduce_to_scalar(self, reduction_func, picks=None):
         return self._reduce_to(reduction_func, target='scalar', picks=picks)
 
-    def _prepare_reduction(self, reduction_func, target, picks):
+    def _prepare_data(self, picks):
         data = self.data_
         if picks is not None:
             ch_axis = self._axis_map['channels']
             data = (data.swapaxes(ch_axis, 0)[picks, ...]
                         .swapaxes(0, ch_axis))
+        return data
+
+    def _prepare_reduction(self, reduction_func, target, picks):
+        data = self._prepare_data(picks)
         _axis_map = self._axis_map
         funcs = list()
         if target == 'topography':

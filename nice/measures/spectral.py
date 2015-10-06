@@ -17,7 +17,10 @@ class PowerSpectralDensity(BaseMeasure):
         self.n_overlap = n_overlap
         self.n_fft = n_fft
         self.comment = comment
-        self._axis_map = {
+
+    @property
+    def _axis_map(self):
+        return {
             'epochs': 0,
             'channels': 1,
             'frequency': 2,

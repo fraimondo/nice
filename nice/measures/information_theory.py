@@ -22,6 +22,13 @@ class KolmogorovComplexity(BaseMeasure):
                                          method_params=self.method_params)
         self.data_ = komp
 
+    @property
+    def _axis_map(self):
+        return {
+            'epochs': 0,
+            'channels': 1
+        }
+
 
 def read_komplexity(fname, comment='default'):
     return KolmogorovComplexity._read(fname, comment=comment)
@@ -40,6 +47,13 @@ class PermutationEntropy(BaseMeasure):
         pe, _ = epochs_compute_pe(epochs, kernel=self.kernel, tau=self.tau,
                                   backend=self.backend)
         self.data_ = pe
+
+    @property
+    def _axis_map(self):
+        return {
+            'epochs': 0,
+            'channels': 1
+        }
 
 
 def read_pe(fname, comment='default'):

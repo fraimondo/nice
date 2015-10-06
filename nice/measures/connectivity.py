@@ -23,6 +23,14 @@ class SymbolicMutualInformation(BaseMeasure):
                                               method_params=self.method_params)
         self.data_ = wsmi if self.method == 'weighted' else smi
 
+    @property
+    def _axis_map(self):
+        return {
+            'epochs': 0,
+            'channels': 1,
+            'channels_y': 2,
+        }
+
 
 def read_wsmi(fname, comment='default'):
     return SymbolicMutualInformation._read(fname, comment=comment)
