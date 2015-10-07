@@ -42,7 +42,9 @@ class Features(OrderedDict):
         n_measures, n_channels = len(measures_to_topo), info['nchan']
         out = np.empty((n_measures, n_channels), dtype=np.float64)
         for ii, meas in enumerate(measures_to_topo):
-            out[ii] = meas.reduce_to_topo(info=info)
+            this_params = (measure_params[meas.__class__.name]
+                           if meas.__class__.name in measure_params else {})
+            out[ii] = meas.reduce_to_topo(info=info, **this_params)
         return out
 
     def reduce_to_scalar(self, measure_params, picks=None):
@@ -53,14 +55,17 @@ class Features(OrderedDict):
         n_measures = len(self)
         out = np.empty(n_measures, dtype=np.float64)
         for ii, meas in enumerate(self.values()):
-            out[ii] = meas.reduce_to_scalar(info)
+            this_params = (measure_params[meas.__class__.name]
+                           if meas.__class__.name in measure_params else {})
+            out[ii] = meas.reduce_to_scalar(info, **this_params)
 
         return out
 
-    def save(self, fname):
-        write_hdf5(fname, self.keys(), title='nice/features/order')
+    def save(self, fname, overwrite=False):
+        write_hdf5(fname, self.keys(), title='nice/features/order',
+                   overwrite=overwrite)
         for meas in self.values():
-            meas.save(fname)
+            meas.save(fname, overwrite='update')
 
     def add_measure(self, measure):
         self[measure._get_title()] = measure

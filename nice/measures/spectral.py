@@ -32,10 +32,10 @@ class PowerSpectralDensity(BaseMeasure):
         # check n_fft VS segment size in final MNE implementation ping
         # @agramfort + yousra
         # XXX XXX XXX (porny triple triple XXX)
+        this_epochs = epochs.crop(tmin=self.tmin, tmax=self.tmax, copy=True)
         psds, freqs = compute_epochs_psd(
-            epochs=epochs, fmin=self.fmin, fmax=self.fmax,
-            tmin=self.tmin, tmax=self.tmax, n_jobs=self.n_jobs,
-            n_overlap=self.n_overlap, n_fft=self.n_fft)
+            epochs=this_epochs, fmin=self.fmin, fmax=self.fmax,
+            n_jobs=self.n_jobs, n_overlap=self.n_overlap, n_fft=self.n_fft)
         if self.normalize:
             psds /= psds.sum(axis=-1)[..., None]
             assert np.allclose(psds.sum(axis=-1), 1.)

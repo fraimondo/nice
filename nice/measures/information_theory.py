@@ -18,7 +18,7 @@ class KolmogorovComplexity(BaseMeasure):
 
     def _fit(self, epochs):
         komp = epochs_compute_komplexity(
-            epochs, tmnbins=self.nbins, tmin=self.tmin,
+            epochs, nbins=self.nbins, tmin=self.tmin,
             tmax=self.tmax, backend=self.backend,
             method_params=self.method_params)
         self.data_ = komp

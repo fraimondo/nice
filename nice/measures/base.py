@@ -37,13 +37,14 @@ class BaseMeasure(object):
         return {k: v for k, v in vars(self).items() if
                 k not in exclude}
 
-    def save(self, fname):
+    def save(self, fname, overwrite=False):
         self._save_info(fname)
         save_vars = self._get_save_vars(exclude=['ch_info_'])
         write_hdf5(
             fname,
             save_vars,
-            title=_get_title(self.__class__, self.comment))
+            title=_get_title(self.__class__, self.comment),
+            overwrite=overwrite)
 
     def fit(self, epochs):
         self.ch_info_ = epochs.info
@@ -125,7 +126,7 @@ class BaseEventRelated(BaseMeasure):
         self.data_ = epochs.get_data()
         return self
 
-    def save(self, fname):
+    def save(self, fname, overwrite=False):
         self._save_info(fname)
         save_vars = self._get_save_vars(
             exclude=['ch_info_', 'data_', 'epochs_'])
@@ -140,9 +141,9 @@ class BaseEventRelated(BaseMeasure):
         if not has_epochs:
             epochs = self.epochs_
             logger.info('Writing epochs to HDF5 file')
-            write_hdf5_mne_epochs(fname, epochs)
+            write_hdf5_mne_epochs(fname, epochs, overwrite=overwrite)
         write_hdf5(
-            fname, save_vars,
+            fname, save_vars, overwrite=overwrite,
             title=_get_title(self.__class__, self.comment))
 
     @classmethod

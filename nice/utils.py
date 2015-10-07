@@ -66,8 +66,8 @@ def h5_listdir(fname, max_depth=4):
     return datasets
 
 
-def write_hdf5_mne_epochs(fname, epochs):
+def write_hdf5_mne_epochs(fname, epochs, overwrite=False):
     epochs_vars = {k: v for k, v in vars(epochs).items() if
                    not k.startswith('_') or k == '_data'}
-    write_hdf5(fname, epochs_vars,
+    write_hdf5(fname, epochs_vars, overwrite=overwrite,
                title='nice/data/epochs')
