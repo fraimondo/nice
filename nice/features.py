@@ -6,6 +6,7 @@ import sys
 import inspect
 import mne
 from mne.io.meas_info import Info
+from mne.utils import logger
 import numpy as np
 
 
@@ -32,32 +33,37 @@ class Features(OrderedDict):
         return is_fit
 
     def reduce_to_topo(self, measure_params, picks=None):
+        logger.info('Reducing to topographies')
+        self._check_measure_params_keys(measure_params)
         if picks:  # XXX think if info is needed down-stream
-            info = mne.io.pick.pick_info(self.info_, picks, copy=True)
+            info = mne.io.pick.pick_info(self.ch_info_, picks, copy=True)
         else:
-            info = self.info_
+            info = self.ch_info_
         measures_to_topo = [meas for meas in self.values() if
                             isin_info(info_source=info,
-                                      info_target=meas.info_)]
-        n_measures, n_channels = len(measures_to_topo), info['nchan']
+                                      info_target=meas.ch_info_)]
+        n_measures = len(measures_to_topo)
+        n_channels = info['nchan'] - len(set(info['bads']))
         out = np.empty((n_measures, n_channels), dtype=np.float64)
         for ii, meas in enumerate(measures_to_topo):
-            this_params = (measure_params[meas.__class__.name]
-                           if meas.__class__.name in measure_params else {})
-            out[ii] = meas.reduce_to_topo(info=info, **this_params)
+            logger.info('Reducing {}'.format(meas._get_title()))
+            this_params = _get_reduction_params(measure_params, meas)
+            out[ii] = meas.reduce_to_topo(**this_params)
         return out
 
     def reduce_to_scalar(self, measure_params, picks=None):
+        logger.info('Reducing to scalars')
+        self._check_measure_params_keys(measure_params)
         if picks:  # XXX think if info is needed down-stream
-            info = mne.io.pick.pick_info(self.info_, picks, copy=True)
+            info = mne.io.pick.pick_info(self.ch_info_, picks, copy=True)
         else:
-            info = self.info_
+            info = self.ch_info_
         n_measures = len(self)
         out = np.empty(n_measures, dtype=np.float64)
         for ii, meas in enumerate(self.values()):
-            this_params = (measure_params[meas.__class__.name]
-                           if meas.__class__.name in measure_params else {})
-            out[ii] = meas.reduce_to_scalar(info, **this_params)
+            logger.info('Reducing {}'.format(meas._get_title()))
+            this_params = _get_reduction_params(measure_params, meas)
+            out[ii] = meas.reduce_to_scalar(**this_params)
 
         return out
 
@@ -69,6 +75,36 @@ class Features(OrderedDict):
 
     def add_measure(self, measure):
         self[measure._get_title()] = measure
+
+    def _check_measure_params_keys(self, measure_params):
+        for key in measure_params.keys():
+            error = False
+            if '/' in key:
+                klass, comment = key.split('/')
+                if 'nice/measure/{}/{}'.format(klass, comment) not in self:
+                    error = True
+            else:
+                prefix = 'nice/measure/{}'.format(key)
+                if not any(k.startswith(prefix) for k in self.keys()):
+                    error = True
+            if error:
+                raise ValueError('Your measure_params is inconsistent with '
+                                 'the elements in this feature collection: '
+                                 '{} is not a valid feature or class'
+                                 .format(key))
+
+
+def _get_reduction_params(measure_params, meas):
+    # XXX Check for typos and issue warnings
+    full = '{}/{}'.format(meas.__class__.__name__, meas.comment)
+    out = {}
+    if full in measure_params:
+        out = measure_params[full]
+    else:
+        part = full.split('/')[0]
+        if part in measure_params:
+            out = measure_params[part]
+    return out
 
 
 def isin_info(info_source, info_target):

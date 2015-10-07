@@ -70,11 +70,13 @@ def test_collecting_feature():
     """Test computation of spectral measures"""
     epochs = _get_data()[:2]
     measures = [
-        PowerSpectralDensity(1, 4),
+        PowerSpectralDensity(fmin=1, fmax=4),
         ContingentNegativeVariation(),
-        EventRelatedTopography(0.1, 0.2),
-        EventRelatedContrast(0.1, 0.2, 'a', 'b'),
-        EventRelatedContrast(0.1, 0.3, 'a', 'b', comment='another_erp')
+        EventRelatedTopography(tmin=0.1, tmax=0.2),
+        EventRelatedContrast(tmin=0.1, tmax=0.2, condition_a='a',
+                             condition_b='b'),
+        EventRelatedContrast(tmin=0.1, tmax=0.3, condition_a='a',
+                             condition_b='b', comment='another_erp')
     ]
 
     features = Features(measures)

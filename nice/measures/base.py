@@ -20,7 +20,7 @@ class BaseMeasure(object):
     def _axis_map(self):
         raise NotImplementedError('This should be in every measure')
 
-    def _save_info(self, fname):
+    def _save_info(self, fname, overwrite=False):
         has_ch_info = False
         with h5py.File(fname) as h5fid:
             if 'nice/data/ch_info' in h5fid:
@@ -31,14 +31,15 @@ class BaseMeasure(object):
         if not has_ch_info:
             ch_info = self.ch_info_
             logger.info('Writing channel info to HDF5 file')
-            write_hdf5(fname, ch_info, title='nice/data/ch_info')
+            write_hdf5(fname, ch_info, title='nice/data/ch_info',
+                       overwrite=overwrite)
 
     def _get_save_vars(self, exclude):
         return {k: v for k, v in vars(self).items() if
                 k not in exclude}
 
     def save(self, fname, overwrite=False):
-        self._save_info(fname)
+        self._save_info(fname, overwrite=overwrite)
         save_vars = self._get_save_vars(exclude=['ch_info_'])
         write_hdf5(
             fname,
@@ -88,6 +89,9 @@ class BaseMeasure(object):
         funcs = list()
         if target == 'topography':
             ch_axis = _axis_map.pop('channels')
+            if reduction_func is not None:
+                reduction_func = [i for i in reduction_func
+                                  if i['axis'] != 'channels']
 
         permutation_list = list()
         if reduction_func is None:
@@ -127,7 +131,7 @@ class BaseEventRelated(BaseMeasure):
         return self
 
     def save(self, fname, overwrite=False):
-        self._save_info(fname)
+        self._save_info(fname, overwrite=overwrite)
         save_vars = self._get_save_vars(
             exclude=['ch_info_', 'data_', 'epochs_'])
 

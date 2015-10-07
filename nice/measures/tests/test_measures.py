@@ -69,14 +69,14 @@ def _compare_instance(inst1, inst2):
 def _base_io_test(inst, epochs, read_fun):
     tmp = _TempDir()
     inst.fit(epochs)
-    inst.save(tmp + '/test.hdf5')
+    inst.save(tmp + '/test.hdf5', overwrite='update')
     inst2 = read_fun(tmp + '/test.hdf5')
     _compare_instance(inst, inst2)
 
 
 def _erfp_io_test(tmp, inst, epochs, read_fun, comment='default'):
     inst.fit(epochs)
-    inst.save(tmp + '/test.hdf5')
+    inst.save(tmp + '/test.hdf5', overwrite='update')
     inst2 = read_fun(tmp + '/test.hdf5', epochs, comment=comment)
     assert_array_equal(inst.epochs_.get_data(), inst2.epochs_.get_data())
     _compare_instance(inst, inst2)
@@ -97,7 +97,7 @@ def _base_reduction_test(inst, epochs):
 def test_spectral():
     """Test computation of spectral measures"""
     epochs = _get_data()[:2]
-    psd = PowerSpectralDensity(1, 4)
+    psd = PowerSpectralDensity(fmin=1, fmax=4)
     _base_io_test(psd, epochs, read_psd)
     _base_reduction_test(psd, epochs)
 
@@ -113,7 +113,7 @@ def test_time_locked():
     tmp = _TempDir()
     with h5py.File(tmp + '/test.hdf5') as fid:
         assert_true('nice/data/epochs' not in fid)
-    ert = EventRelatedTopography(0.1, 0.2)
+    ert = EventRelatedTopography(tmin=0.1, tmax=0.2)
     _erfp_io_test(tmp, ert, epochs, read_ert)
     with h5py.File(tmp + '/test.hdf5') as fid:
         assert_true(fid['nice/data/epochs'].keys() != [])
@@ -121,11 +121,13 @@ def test_time_locked():
     tmp = _TempDir()
     with h5py.File(tmp + '/test.hdf5') as fid:
         assert_true('nice/data/epochs' not in fid)
-    erc = EventRelatedContrast(0.1, 0.2, 'a', 'b')
+    erc = EventRelatedContrast(tmin=0.1, tmax=0.2, condition_a='a',
+                               condition_b='b')
     _erfp_io_test(tmp, erc, epochs, read_erc)
     with h5py.File(tmp + '/test.hdf5') as fid:
         assert_true('nice/data/epochs' in fid)
-    erc = EventRelatedContrast(0.1, 0.3, 'a', 'b', comment='another_erp')
+    erc = EventRelatedContrast(tmin=0.1, tmax=0.2, condition_a='a',
+                               condition_b='b', comment='another_erp')
     _erfp_io_test(tmp, erc, epochs, read_erc, comment='another_erp')
     with h5py.File(tmp + '/test.hdf5') as fid:
         assert_true(fid['nice/data/epochs'].keys() != [])

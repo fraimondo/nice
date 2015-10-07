@@ -3,7 +3,7 @@ from .base import BaseMeasure, BaseEventRelated
 from ..recipes.time_locked import epochs_compute_cnv
 
 from mne.utils import _time_mask
-
+from mne.io.pick import pick_types
 
 class ContingentNegativeVariation(BaseMeasure):
     """docstring for ContingentNegativeVariation"""
@@ -45,9 +45,10 @@ class EventRelatedTopography(BaseEventRelated):
     def _prepare_data(self, picks):
         time_mask = _time_mask(self.epochs_.times, self.tmin, self.tmax)
         subset = self.subset
-        picks = Ellipsis if not picks else picks
-        return ((self.epochs_[subset] if subset else self.epochs)
-                .get_data()[..., picks, time_mask])
+        picks = (pick_types(self.epochs_.info, eeg=True, meg=True)
+                 if not picks else picks)
+        return ((self.epochs_[subset] if subset else self.epochs_)
+                .get_data()[:, picks][..., time_mask])
 
 
 def read_ert(fname, epochs, comment='default'):
