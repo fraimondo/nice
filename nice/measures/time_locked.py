@@ -5,6 +5,7 @@ from ..recipes.time_locked import epochs_compute_cnv
 from mne.utils import _time_mask
 from mne.io.pick import pick_types
 
+
 class ContingentNegativeVariation(BaseMeasure):
     """docstring for ContingentNegativeVariation"""
 

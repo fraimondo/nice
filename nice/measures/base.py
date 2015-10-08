@@ -5,6 +5,7 @@ import numpy as np
 from mne.utils import logger
 from mne.epochs import _compare_epochs_infos
 from mne.io.meas_info import Info
+from mne.io.pick import pick_info, pick_types
 import h5py
 
 
@@ -48,8 +49,8 @@ class BaseMeasure(object):
             overwrite=overwrite)
 
     def fit(self, epochs):
-        self.ch_info_ = epochs.info
         self._fit(epochs)
+        self.ch_info_ = epochs.info
         return self
 
     def transform(self, epochs):

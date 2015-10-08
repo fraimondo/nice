@@ -42,6 +42,8 @@ class PowerSpectralDensity(BaseMeasure):
         if self.dB is True and self.normalize is False:
             psds = 10 * np.log10(psds)
             unit = 'dB'
+        elif self.normalize:
+            unit = 'perc'
         else:
             unit = 'power'
 

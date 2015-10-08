@@ -1,3 +1,5 @@
+import numpy as np
+
 from .base import BaseMeasure
 from ..algorithms.connectivity import epochs_compute_wsmi
 
@@ -21,7 +23,9 @@ class SymbolicMutualInformation(BaseMeasure):
             epochs, kernel=self.kernel, tau=self.tau, tmin=self.tmin,
             tmax=self.tmax, backend=self.backend,
             method_params=self.method_params)
-        self.data_ = wsmi if self.method == 'weighted' else smi
+        data = wsmi if self.method == 'weighted' else smi
+        data += np.transpose(data, [1, 0, 2])
+        self.data_ = data
 
     @property
     def _axis_map(self):
@@ -32,5 +36,5 @@ class SymbolicMutualInformation(BaseMeasure):
         }
 
 
-def read_wsmi(fname, comment='default'):
+def read_smi(fname, comment='default'):
     return SymbolicMutualInformation._read(fname, comment=comment)
