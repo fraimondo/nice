@@ -23,7 +23,7 @@ class Features(OrderedDict):
         this_epochs = epochs.pick_types(eeg=True, meg=True, copy=True)
         for meas in self.values():
             meas.fit(this_epochs)
-        self.ch_info_ = self.values()[0].ch_info_
+        self.ch_info_ = list(self.values())[0].ch_info_
 
     def _check_measures_fit(self):
         is_fit = True
