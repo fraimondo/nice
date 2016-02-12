@@ -2,6 +2,7 @@ from collections import OrderedDict
 from .utils import h5_listdir
 from .externals.h5io import read_hdf5, write_hdf5
 from .measures.base import BaseMeasure, BaseEventRelated
+from .measures.spectral import PowerSpectralDensity
 import sys
 import inspect
 import mne
@@ -20,9 +21,12 @@ class Features(OrderedDict):
             self.ch_info_ = self.values()[0].ch_info_
 
     def fit(self, epochs):
-        this_epochs = epochs.pick_types(eeg=True, meg=True, copy=True)
         for meas in self.values():
-            meas.fit(this_epochs)
+            if isinstance(meas, PowerSpectralDensity):
+                epochs._check_freq_range(meas.fmin, meas.fmax)
+
+        for meas in self.values():
+            meas.fit(epochs)
         self.ch_info_ = list(self.values())[0].ch_info_
 
     def _check_measures_fit(self):

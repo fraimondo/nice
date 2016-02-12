@@ -1,23 +1,20 @@
 from .base import BaseMeasure
 
 import numpy as np
-from mne.time_frequency import compute_epochs_psd
+
+from mne.utils import _time_mask as float_mask
 
 
 class PowerSpectralDensity(BaseMeasure):
     """docstring for PSD"""
 
-    def __init__(self, tmin=None, tmax=None, fmin=0, fmax=np.inf, n_fft=256,
-                 n_overlap=0, normalize=False, dB=True, n_jobs=1,
+    def __init__(self, fmin=0, fmax=np.inf, normalize=False, dB=True,
                  comment='default'):
-        BaseMeasure.__init__(self, tmin, tmax, comment)
+        BaseMeasure.__init__(self, tmin=None, tmax=None, comment=comment)
         self.fmin = fmin
         self.fmax = fmax
         self.normalize = normalize
         self.dB = dB
-        self.n_jobs = n_jobs
-        self.n_overlap = n_overlap
-        self.n_fft = n_fft
 
     @property
     def _axis_map(self):
@@ -28,19 +25,16 @@ class PowerSpectralDensity(BaseMeasure):
         }
 
     def _fit(self, epochs):
-        # XXX XXX XXX (porny triple triple XXX)
-        # check n_fft VS segment size in final MNE implementation ping
-        # @agramfort + yousra
-        # XXX XXX XXX (porny triple triple XXX)
-        this_epochs = epochs.crop(tmin=self.tmin, tmax=self.tmax, copy=True)
-        psds, freqs = compute_epochs_psd(
-            epochs=this_epochs, fmin=self.fmin, fmax=self.fmax,
-            n_jobs=self.n_jobs, n_overlap=self.n_overlap, n_fft=self.n_fft)
+        epochs._check_freq_range(self.fmin, self.fmax)
+        psds, freqs = epochs.get_psds()
+        mask = float_mask(freqs, 1., 4.)
+        this_psds = psds[:, :, mask]
+        this_freqs = freqs[mask]
         if self.normalize:
-            psds /= psds.sum(axis=-1)[..., None]
-            assert np.allclose(psds.sum(axis=-1), 1.)
+            this_psds /= this_psds.sum(axis=-1)[..., None]
+            assert np.allclose(this_psds.sum(axis=-1), 1.)
         if self.dB is True and self.normalize is False:
-            psds = 10 * np.log10(psds)
+            this_psds = 10 * np.log10(this_psds)
             unit = 'dB'
         elif self.normalize:
             unit = 'perc'
@@ -48,7 +42,7 @@ class PowerSpectralDensity(BaseMeasure):
             unit = 'power'
 
         self.data_ = psds
-        self.freqs_ = freqs
+        self.freqs_ = this_freqs
         self.unit_ = unit
 
 
