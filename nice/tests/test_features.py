@@ -18,9 +18,10 @@ from nice.measures import ContingentNegativeVariation
 from nice.measures import KolmogorovComplexity
 from nice.measures import PermutationEntropy
 from nice.measures import SymbolicMutualInformation
-from nice.measures import EventRelatedTopography
-from nice.measures import EventRelatedContrast
+from nice.measures import TimeLockedTopography
+from nice.measures import TimeLockedContrast
 
+from nice.epochs import EpochsEnhancer
 from nice import Features, read_features
 
 
@@ -47,7 +48,7 @@ def _get_data():
 
     epochs = mne.Epochs(raw, events, event_id, tmin, tmax, picks=picks,
                         preload=preload, decim=3)
-    return epochs
+    return EpochsEnhancer(epochs)
 
 
 clean_warning_registry()  # really clean warning stack
@@ -72,11 +73,11 @@ def test_collecting_feature():
     measures = [
         PowerSpectralDensity(fmin=1, fmax=4),
         ContingentNegativeVariation(),
-        EventRelatedTopography(tmin=0.1, tmax=0.2),
-        EventRelatedContrast(tmin=0.1, tmax=0.2, condition_a='a',
-                             condition_b='b'),
-        EventRelatedContrast(tmin=0.1, tmax=0.3, condition_a='a',
-                             condition_b='b', comment='another_erp')
+        TimeLockedTopography(tmin=0.1, tmax=0.2),
+        TimeLockedContrast(tmin=0.1, tmax=0.2, condition_a='a',
+                           condition_b='b'),
+        TimeLockedContrast(tmin=0.1, tmax=0.3, condition_a='a',
+                           condition_b='b', comment='another_erp')
     ]
 
     features = Features(measures)

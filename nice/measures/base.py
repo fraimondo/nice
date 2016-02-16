@@ -1,5 +1,5 @@
 from ..externals.h5io import write_hdf5, read_hdf5
-from ..utils import write_hdf5_mne_epochs
+from ..utils import write_hdf5_mne_epochs, info_to_dict
 import numpy as np
 
 from mne.utils import logger
@@ -30,9 +30,9 @@ class BaseMeasure(object):
                             'will not be overwritten')
 
         if not has_ch_info:
-            ch_info = self.ch_info_
             logger.info('Writing channel info to HDF5 file')
-            write_hdf5(fname, ch_info, title='nice/data/ch_info',
+            write_hdf5(fname, info_to_dict(self.ch_info_),
+                       title='nice/data/ch_info',
                        overwrite=overwrite)
 
     def _get_save_vars(self, exclude):
@@ -119,7 +119,7 @@ class BaseMeasure(object):
         return _read_measure(cls, fname, comment=comment)
 
 
-class BaseEventRelated(BaseMeasure):
+class BaseTimeLocked(BaseMeasure):
 
     def __init__(self, tmin, tmax, comment):
         BaseMeasure.__init__(self, tmin, tmax, comment)
@@ -153,12 +153,23 @@ class BaseEventRelated(BaseMeasure):
 
     @classmethod
     def _read(cls, fname, epochs, comment='default'):
-        return _read_event_related(cls, fname=fname, epochs=epochs,
+        return _read_time_locked(cls, fname=fname, epochs=epochs,
                                    comment=comment)
 
     def _get_title(self):
         return _get_title(self.__class__, self.comment)
 
+
+class BaseDecoding(BaseMeasure):
+    def __init__(self, tmin, tmax, comment):
+        BaseMeasure.__init__(self, tmin, tmax, comment)
+
+    def fit(self, epochs):
+        self._fit(epochs)
+        return self
+
+    def _get_title(self):
+        return _get_title(self.__class__, self.comment)
 
 def _get_title(klass, comment):
     if 'measure' in klass.__module__:
@@ -187,7 +198,7 @@ def _check_epochs_consistency(info1, info2, shape1, shape2):
     np.testing.assert_array_equal(shape1, shape2)
 
 
-def _read_event_related(cls, fname, epochs, comment='default'):
+def _read_time_locked(cls, fname, epochs, comment='default'):
     out = _read_measure(cls, fname, comment=comment)
     shape1 = epochs.get_data().shape
     shape2 = out.shape_

@@ -18,11 +18,13 @@ from nice.measures import PowerSpectralDensity, read_psd
 from nice.measures import ContingentNegativeVariation, read_cnv
 from nice.measures import KolmogorovComplexity, read_komplexity
 from nice.measures import PermutationEntropy, read_pe
-from nice.measures import SymbolicMutualInformation, read_wsmi
+from nice.measures import SymbolicMutualInformation, read_smi
 
-from nice.measures import EventRelatedTopography, read_ert
+from nice.measures import TimeLockedTopography, read_ert
 
-from nice.measures import EventRelatedContrast, read_erc
+from nice.measures import TimeLockedContrast, read_erc
+
+from nice.epochs import EpochsEnhancer
 
 matplotlib.use('Agg')  # for testing don't use X server
 
@@ -47,7 +49,7 @@ def _get_data():
 
     epochs = mne.Epochs(raw, events, event_id, tmin, tmax, picks=picks,
                         preload=preload, decim=3)
-    return epochs
+    return EpochsEnhancer(epochs)
 
 
 clean_warning_registry()  # really clean warning stack
@@ -113,7 +115,7 @@ def test_time_locked():
     tmp = _TempDir()
     with h5py.File(tmp + '/test.hdf5') as fid:
         assert_true('nice/data/epochs' not in fid)
-    ert = EventRelatedTopography(tmin=0.1, tmax=0.2)
+    ert = TimeLockedTopography(tmin=0.1, tmax=0.2)
     _erfp_io_test(tmp, ert, epochs, read_ert)
     with h5py.File(tmp + '/test.hdf5') as fid:
         assert_true(fid['nice/data/epochs'].keys() != [])
@@ -121,12 +123,12 @@ def test_time_locked():
     tmp = _TempDir()
     with h5py.File(tmp + '/test.hdf5') as fid:
         assert_true('nice/data/epochs' not in fid)
-    erc = EventRelatedContrast(tmin=0.1, tmax=0.2, condition_a='a',
+    erc = TimeLockedContrast(tmin=0.1, tmax=0.2, condition_a='a',
                                condition_b='b')
     _erfp_io_test(tmp, erc, epochs, read_erc)
     with h5py.File(tmp + '/test.hdf5') as fid:
         assert_true('nice/data/epochs' in fid)
-    erc = EventRelatedContrast(tmin=0.1, tmax=0.2, condition_a='a',
+    erc = TimeLockedContrast(tmin=0.1, tmax=0.2, condition_a='a',
                                condition_b='b', comment='another_erp')
     _erfp_io_test(tmp, erc, epochs, read_erc, comment='another_erp')
     with h5py.File(tmp + '/test.hdf5') as fid:
@@ -153,7 +155,7 @@ def test_wsmi():
     """Test computation of wsmi measure"""
     epochs = _get_data()[:2]
     wsmi = SymbolicMutualInformation()
-    _base_io_test(wsmi, epochs, read_wsmi)
+    _base_io_test(wsmi, epochs, read_smi)
     _base_reduction_test(wsmi, epochs)
 
 

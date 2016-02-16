@@ -69,7 +69,7 @@ def _define_symbols(kernel):
             result_dict[order[::-1]] = total_symbols - cursymbol
     result = []
     for v in range(total_symbols):
-        for symbol, value in result_dict.iteritems():
+        for symbol, value in result_dict.items():
             if value == v:
                 result += [symbol]
     return result

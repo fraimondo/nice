@@ -1,7 +1,12 @@
-from .base import BaseMeasure, BaseEventRelated
+from collections import Counter, OrderedDict
+
+import numpy as np
+
+from .base import BaseMeasure, BaseTimeLocked
 
 from ..recipes.time_locked import epochs_compute_cnv
-
+from ..utils import mne_epochs_key_to_index
+from ..algorithms.decoding import decode_window
 from mne.utils import _time_mask
 from mne.io.pick import pick_types
 
@@ -18,30 +23,30 @@ class ContingentNegativeVariation(BaseMeasure):
 
     @property
     def _axis_map(self):
-        return {
-            'epochs': 0,
-            'channels': 1
-        }
+        return OrderedDict([
+            ('epochs', 0),
+            ('channels', 1)
+        ])
 
 
 def read_cnv(fname, comment='default'):
     return ContingentNegativeVariation._read(fname, comment=comment)
 
 
-class EventRelatedTopography(BaseEventRelated):
+class TimeLockedTopography(BaseTimeLocked):
     """docstring for ERP"""
 
     def __init__(self, tmin, tmax, subset=None, comment='default'):
-        BaseEventRelated.__init__(self, tmin, tmax, comment)
+        BaseTimeLocked.__init__(self, tmin, tmax, comment)
         self.subset = subset
 
     @property
     def _axis_map(self):
-        return {
-            'epochs': 0,
-            'channels': 1,
-            'times': 2
-        }
+        return OrderedDict([
+            ('epochs', 0),
+            ('channels', 1),
+            ('times', 2)
+        ])
 
     def _prepare_data(self, picks):
         time_mask = _time_mask(self.epochs_.times, self.tmin, self.tmax)
@@ -53,34 +58,97 @@ class EventRelatedTopography(BaseEventRelated):
 
 
 def read_ert(fname, epochs, comment='default'):
-    return EventRelatedTopography._read(fname, epochs=epochs, comment=comment)
+    return TimeLockedTopography._read(fname, epochs=epochs, comment=comment)
 
 
-class EventRelatedContrast(BaseEventRelated):
+class TimeLockedContrast(BaseTimeLocked):
     """docstring for ERP"""
 
     def __init__(self, tmin, tmax, condition_a, condition_b,
                  comment='default'):
-        BaseEventRelated.__init__(self, tmin, tmax, comment)
+        BaseTimeLocked.__init__(self, tmin, tmax, comment)
         self.condition_a = condition_a
         self.condition_b = condition_b
 
     @property
     def _axis_map(self):
-        return {
-            'epochs': 0,
-            'channels': 1,
-            'times': 2
-        }
+        return OrderedDict([
+            ('epochs', 0),
+            ('channels', 1),
+            ('times', 2)
+        ])
 
     def _reduce_to(self, reduction_func, target, picks):
         cont_list = list()
         for cond in [self.condition_a, self.condition_b]:
-            ert = EventRelatedTopography(self.tmin, self.tmax, subset=cond)
+            ert = TimeLockedTopography(self.tmin, self.tmax, subset=cond)
             ert.fit(self.epochs_)
             cont_list.append(ert._reduce_to(reduction_func, target, picks))
         return cont_list[0] - cont_list[1]
 
 
 def read_erc(fname, epochs, comment='default'):
-    return EventRelatedContrast._read(fname, epochs=epochs, comment=comment)
+    return TimeLockedContrast._read(fname, epochs=epochs, comment=comment)
+
+
+class WindowDecoding(BaseTimeLocked):
+    def __init__(self, tmin, tmax, condition_a, condition_b, decoding_params,
+                 comment='default'):
+        BaseTimeLocked.__init__(self, tmin, tmax, comment)
+        self.condition_a = condition_a
+        self.condition_b = condition_b
+        self.decoding_params = decoding_params
+
+    def _fit(self, epochs):
+        dp = self.decoding_params
+
+        X, y, sample_weight = self._prepare_window_decoding(epochs)
+        if dp['sample_weight'] not in ('auto', None):
+            sample_weight = dp['sample_weight']
+
+        probas, predictions, scores = decode_window(
+            X, y, clf=dp['clf'], cv=dp['cv'],
+            sample_weight=sample_weight, n_jobs=dp['n_jobs'],
+            random_state=dp['random_state'])
+        self.data_ = scores
+        self.other_outputs_ = {'probas': probas, 'predictions': predictions}
+        self.ch_info_ = epochs.info
+
+    @property
+    def _axis_map(self):
+        return OrderedDict([
+            ('scores', 0),
+        ])
+
+    def _prepare_window_decoding(self, epochs):
+        count = Counter(epochs.events[:, 2])
+        class_weights = {k: 1. / v for k, v in count.items()}
+        sample_weight = np.zeros(len(epochs.events), dtype=np.float)
+        for k, v in epochs.events_id:
+            this_index = epochs.events[:, 2] == v
+            sample_weight[this_index] = class_weights[k]
+
+        condition_a_mask = mne_epochs_key_to_index(epochs, self.condition_a)
+        condition_b_mask = mne_epochs_key_to_index(epochs, self.condition_b)
+
+        sample_weight_a = sample_weight[condition_a_mask]
+        sample_weight_b = sample_weight[condition_b_mask]
+
+        y = np.r_[np.zeros(condition_b_mask.sum()),
+                  np.ones(condition_a_mask.sum())]
+
+        X = np.concatenate([
+            epochs.get_data()[condition_b_mask],
+            epochs.get_data()[condition_a_mask]
+        ]).reshape(len(y), -1)
+
+        sample_weight = np.r_[sample_weight_b, sample_weight_a]
+        return X, y, sample_weight
+
+
+class TimeDecoding(BaseTimeLocked):
+    def __init__(self, tmin, tmax, condition_a, condition_b, decoding_params,
+                 comment='default'):
+        BaseTimeLocked.__init__(self, tmin, tmax, comment)
+        self.condition_a = condition_a
+        self.condition_b = condition_b

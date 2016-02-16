@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from .base import BaseMeasure
 from ..algorithms.information_theory import (epochs_compute_komplexity,
                                              epochs_compute_pe)
@@ -25,10 +26,10 @@ class KolmogorovComplexity(BaseMeasure):
 
     @property
     def _axis_map(self):
-        return {
-            'channels': 0,
-            'epochs': 1,
-        }
+        return OrderedDict([
+            ('channels', 0),
+            ('epochs', 1)
+        ])
 
 
 def read_komplexity(fname, comment='default'):
@@ -53,10 +54,10 @@ class PermutationEntropy(BaseMeasure):
 
     @property
     def _axis_map(self):
-        return {
-            'channels': 0,
-            'epochs': 1,
-        }
+        return OrderedDict([
+            ('channels', 0),
+            ('epochs', 1)
+        ])
 
 
 def read_pe(fname, comment='default'):

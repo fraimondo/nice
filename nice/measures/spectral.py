@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from .base import BaseMeasure
 
 import numpy as np
@@ -8,8 +9,8 @@ from mne.utils import _time_mask as float_mask
 class PowerSpectralDensity(BaseMeasure):
     """docstring for PSD"""
 
-    def __init__(self, fmin=0, fmax=np.inf, normalize=False, dB=True,
-                 comment='default'):
+    def __init__(self, tmin=None, tmax=None, fmin=0, fmax=np.inf,
+                 normalize=False, dB=True, comment='default'):
         BaseMeasure.__init__(self, tmin=None, tmax=None, comment=comment)
         self.fmin = fmin
         self.fmax = fmax
@@ -18,11 +19,11 @@ class PowerSpectralDensity(BaseMeasure):
 
     @property
     def _axis_map(self):
-        return {
-            'epochs': 0,
-            'channels': 1,
-            'frequency': 2,
-        }
+        return OrderedDict([
+            ('epochs', 0),
+            ('channels', 1),
+            ('frequency', 2)
+        ])
 
     def _fit(self, epochs):
         epochs._check_freq_range(self.fmin, self.fmax)

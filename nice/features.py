@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from .utils import h5_listdir
 from .externals.h5io import read_hdf5, write_hdf5
-from .measures.base import BaseMeasure, BaseEventRelated
+from .measures.base import BaseMeasure, BaseTimeLocked
 from .measures.spectral import PowerSpectralDensity
 import sys
 import inspect
@@ -18,7 +18,7 @@ class Features(OrderedDict):
         for meas in measures:
             self.add_measure(meas)
         if self._check_measures_fit():
-            self.ch_info_ = self.values()[0].ch_info_
+            self.ch_info_ = list(self.values())[0].ch_info_
 
     def fit(self, epochs):
         for meas in self.values():
@@ -73,7 +73,7 @@ class Features(OrderedDict):
         return out
 
     def save(self, fname, overwrite=False):
-        write_hdf5(fname, self.keys(), title='nice/features/order',
+        write_hdf5(fname, list(self.keys()), title='nice/features/order',
                    overwrite=overwrite)
         for meas in self.values():
             meas.save(fname, overwrite='update')
@@ -141,7 +141,7 @@ def read_features(fname):
     for content in measure_order:
         _, _, my_class_name, comment = content.split('/')
         my_class = measures_classes[my_class_name]
-        if issubclass(my_class, BaseEventRelated):
+        if issubclass(my_class, BaseTimeLocked):
             if not epochs:
                 raise RuntimeError(
                     'Something weird has happened. You want to read a '

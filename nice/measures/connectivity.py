@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import numpy as np
 
 from .base import BaseMeasure
@@ -29,11 +30,11 @@ class SymbolicMutualInformation(BaseMeasure):
 
     @property
     def _axis_map(self):
-        return {
-            'channels': 0,
-            'channels_y': 1,
-            'epochs': 2,
-        }
+        return OrderedDict([
+            ('channels', 0),
+            ('channels_y', 1),
+            ('epochs', 2)
+        ])
 
 
 def read_smi(fname, comment='default'):
