@@ -24,6 +24,8 @@ from nice.measures import TimeLockedTopography, read_ert
 
 from nice.measures import TimeLockedContrast, read_erc
 
+from nice.measures import WindowDecoding, read_wd
+
 from nice.epochs import EpochsEnhancer
 
 matplotlib.use('Agg')  # for testing don't use X server
@@ -55,17 +57,24 @@ def _get_data():
 clean_warning_registry()  # really clean warning stack
 
 
+def _compare_values(v, v2):
+    if isinstance(v, np.ndarray):
+        assert_array_equal(v, v2)
+    elif isinstance(v, mne.io.meas_info.Info):
+        pass
+    elif isinstance(v, dict):
+        for key, value in v.items():
+            _compare_values(v[key], v2[key])
+    else:
+        assert_equal(v, v2)
+
+
 def _compare_instance(inst1, inst2):
     for k, v in vars(inst1).items():
         v2 = getattr(inst2, k)
         if k == 'ch_info_' and v2 is None:
             continue
-        if isinstance(v, np.ndarray):
-            assert_array_equal(v, v2)
-        elif isinstance(v, mne.io.meas_info.Info):
-            pass
-        else:
-            assert_equal(v, v2)
+        _compare_values(v, v2)
 
 
 def _base_io_test(inst, epochs, read_fun):
@@ -107,7 +116,15 @@ def test_spectral():
 def test_time_locked():
     """Test computation of time locked measures"""
 
-    epochs = _get_data()[:2]
+    raw = mne.io.Raw(raw_fname, add_eeg_ref=False, proj=False)
+    events = mne.read_events(event_name)
+    picks = mne.pick_types(raw.info, meg=True, eeg=True, stim=True,
+                           ecg=True, eog=True, include=['STI 014'],
+                           exclude='bads')[::15]
+
+    epochs = mne.Epochs(raw, events, event_id_2, tmin, tmax, picks=picks,
+                        preload=preload, decim=3)
+    epochs = EpochsEnhancer(epochs)
     cnv = ContingentNegativeVariation()
     _base_io_test(cnv, epochs, read_cnv)
     _base_reduction_test(cnv, epochs)
@@ -124,12 +141,12 @@ def test_time_locked():
     with h5py.File(tmp + '/test.hdf5') as fid:
         assert_true('nice/data/epochs' not in fid)
     erc = TimeLockedContrast(tmin=0.1, tmax=0.2, condition_a='a',
-                               condition_b='b')
+                             condition_b='b')
     _erfp_io_test(tmp, erc, epochs, read_erc)
     with h5py.File(tmp + '/test.hdf5') as fid:
         assert_true('nice/data/epochs' in fid)
     erc = TimeLockedContrast(tmin=0.1, tmax=0.2, condition_a='a',
-                               condition_b='b', comment='another_erp')
+                             condition_b='b', comment='another_erp')
     _erfp_io_test(tmp, erc, epochs, read_erc, comment='another_erp')
     with h5py.File(tmp + '/test.hdf5') as fid:
         assert_true(fid['nice/data/epochs'].keys() != [])
@@ -157,6 +174,33 @@ def test_wsmi():
     wsmi = SymbolicMutualInformation()
     _base_io_test(wsmi, epochs, read_smi)
     _base_reduction_test(wsmi, epochs)
+
+
+def test_window_decoding():
+    """Test computation of window decoding"""
+
+    raw = mne.io.Raw(raw_fname, add_eeg_ref=False, proj=False)
+    events = mne.read_events(event_name)
+    picks = mne.pick_types(raw.info, meg=True, eeg=True, stim=True,
+                           ecg=True, eog=True, include=['STI 014'],
+                           exclude='bads')[::15]
+
+    epochs = mne.Epochs(raw, events, event_id_2, tmin, tmax, picks=picks,
+                        preload=preload, decim=3)
+    epochs = EpochsEnhancer(epochs)
+    decoding_params = dict(
+        sample_weight='auto',
+        clf=None,
+        cv=None,
+        n_jobs=1,
+        random_state=42,
+        labels=None
+    )
+
+    wd = WindowDecoding(tmin=0.1, tmax=0.2, condition_a='a',
+                        condition_b='b', decoding_params=decoding_params)
+    _base_io_test(wd, epochs, read_wd)
+
 
 
 if __name__ == "__main__":

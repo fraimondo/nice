@@ -2,7 +2,7 @@ from collections import Counter, OrderedDict
 
 import numpy as np
 
-from .base import BaseMeasure, BaseTimeLocked
+from .base import BaseMeasure, BaseTimeLocked, _read_measure
 
 from ..recipes.time_locked import epochs_compute_cnv
 from ..utils import mne_epochs_key_to_index
@@ -91,10 +91,10 @@ def read_erc(fname, epochs, comment='default'):
     return TimeLockedContrast._read(fname, epochs=epochs, comment=comment)
 
 
-class WindowDecoding(BaseTimeLocked):
+class WindowDecoding(BaseMeasure):
     def __init__(self, tmin, tmax, condition_a, condition_b, decoding_params,
                  comment='default'):
-        BaseTimeLocked.__init__(self, tmin, tmax, comment)
+        BaseMeasure.__init__(self, tmin, tmax, comment)
         self.condition_a = condition_a
         self.condition_b = condition_b
         self.decoding_params = decoding_params
@@ -109,10 +109,10 @@ class WindowDecoding(BaseTimeLocked):
         probas, predictions, scores = decode_window(
             X, y, clf=dp['clf'], cv=dp['cv'],
             sample_weight=sample_weight, n_jobs=dp['n_jobs'],
-            random_state=dp['random_state'])
+            random_state=dp['random_state'], labels=dp['labels'])
         self.data_ = scores
         self.other_outputs_ = {'probas': probas, 'predictions': predictions}
-        self.ch_info_ = epochs.info
+        self.shape_ = self.data_.shape
 
     @property
     def _axis_map(self):
@@ -122,9 +122,10 @@ class WindowDecoding(BaseTimeLocked):
 
     def _prepare_window_decoding(self, epochs):
         count = Counter(epochs.events[:, 2])
-        class_weights = {k: 1. / v for k, v in count.items()}
+        id_event = {v: k for k, v in epochs.event_id.items()}
+        class_weights = {id_event[k]: 1. / v for k, v in count.items()}
         sample_weight = np.zeros(len(epochs.events), dtype=np.float)
-        for k, v in epochs.events_id:
+        for k, v in epochs.event_id.items():
             this_index = epochs.events[:, 2] == v
             sample_weight[this_index] = class_weights[k]
 
@@ -144,6 +145,10 @@ class WindowDecoding(BaseTimeLocked):
 
         sample_weight = np.r_[sample_weight_b, sample_weight_a]
         return X, y, sample_weight
+
+
+def read_wd(fname, comment='default'):
+    return WindowDecoding._read(fname, comment=comment)
 
 
 class TimeDecoding(BaseTimeLocked):
