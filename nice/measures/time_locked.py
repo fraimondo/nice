@@ -9,6 +9,7 @@ from ..utils import mne_epochs_key_to_index
 from ..algorithms.decoding import decode_window
 from mne.utils import _time_mask
 from mne.io.pick import pick_types
+import mne.decoding as mne_decoding
 
 
 class ContingentNegativeVariation(BaseMeasure):
@@ -121,29 +122,15 @@ class WindowDecoding(BaseMeasure):
         ])
 
     def _prepare_window_decoding(self, epochs):
-        count = Counter(epochs.events[:, 2])
-        id_event = {v: k for k, v in epochs.event_id.items()}
-        class_weights = {id_event[k]: 1. / v for k, v in count.items()}
-        sample_weight = np.zeros(len(epochs.events), dtype=np.float)
-        for k, v in epochs.event_id.items():
-            this_index = epochs.events[:, 2] == v
-            sample_weight[this_index] = class_weights[k]
-
-        condition_a_mask = mne_epochs_key_to_index(epochs, self.condition_a)
-        condition_b_mask = mne_epochs_key_to_index(epochs, self.condition_b)
-
-        sample_weight_a = sample_weight[condition_a_mask]
-        sample_weight_b = sample_weight[condition_b_mask]
-
-        y = np.r_[np.zeros(condition_b_mask.sum()),
-                  np.ones(condition_a_mask.sum())]
-
+        y, condition_a_mask, condition_b_mask = _prepare_y(
+            epochs, self.condition_a, self.condition_b)
+        sample_weight = _prepare_sample_weights(
+            epochs, condition_a_mask, condition_b_mask)
         X = np.concatenate([
             epochs.get_data()[condition_b_mask],
             epochs.get_data()[condition_a_mask]
         ]).reshape(len(y), -1)
 
-        sample_weight = np.r_[sample_weight_b, sample_weight_a]
         return X, y, sample_weight
 
 
@@ -151,9 +138,86 @@ def read_wd(fname, comment='default'):
     return WindowDecoding._read(fname, comment=comment)
 
 
-class TimeDecoding(BaseTimeLocked):
+class TimeDecoding(BaseMeasure):
     def __init__(self, tmin, tmax, condition_a, condition_b, decoding_params,
                  comment='default'):
-        BaseTimeLocked.__init__(self, tmin, tmax, comment)
+        BaseMeasure.__init__(self, tmin, tmax, comment)
         self.condition_a = condition_a
         self.condition_b = condition_b
+        self.decoding_params = decoding_params
+
+    def _fit(self, epochs):
+        dp = {k: v for k, v in self.decoding_params.items()}
+        dp['times'] = dict(start=self.tmin, stop=self.tmax)
+        td = mne_decoding.TimeDecoding(**dp)
+        y, _, _ = _prepare_y(epochs, self.condition_a, self.condition_b)
+        td.fit(epochs, y=y)
+        td.score(epochs, y=y)
+        self.data_ = np.array(td.scores_)
+        self.shape_ = self.data_.shape
+
+    @property
+    def _axis_map(self):
+        return OrderedDict([
+            ('times', 0),
+        ])
+
+
+def read_td(fname, comment='default'):
+    return TimeDecoding._read(fname, comment=comment)
+
+
+class GeneralizationDecoding(BaseMeasure):
+    def __init__(self, tmin, tmax, condition_a, condition_b, decoding_params,
+                 comment='default'):
+        BaseMeasure.__init__(self, tmin, tmax, comment)
+        self.condition_a = condition_a
+        self.condition_b = condition_b
+        self.decoding_params = decoding_params
+
+    def _fit(self, epochs):
+        dp = {k: v for k, v in self.decoding_params.items()}
+        dp['train_times'] = dict(start=self.tmin, stop=self.tmax)
+        dp['test_times'] = dict(start=self.tmin, stop=self.tmax)
+        td = mne_decoding.GeneralizationAcrossTime(**dp)
+        y, _, _ = _prepare_y(epochs, self.condition_a, self.condition_b)
+        td.fit(epochs, y=y)
+        td.score(epochs, y=y)
+        self.data_ = np.array(td.scores_)
+        self.shape_ = self.data_.shape
+
+    @property
+    def _axis_map(self):
+        return OrderedDict([
+            ('train_times', 0),
+            ('test_times', 1),
+        ])
+
+
+def read_gd(fname, comment='default'):
+    return GeneralizationDecoding._read(fname, comment=comment)
+
+
+def _prepare_sample_weights(epochs, condition_a_mask, condition_b_mask):
+    count = Counter(epochs.events[:, 2])
+    id_event = {v: k for k, v in epochs.event_id.items()}
+    class_weights = {id_event[k]: 1. / v for k, v in count.items()}
+    sample_weight = np.zeros(len(epochs.events), dtype=np.float)
+    for k, v in epochs.event_id.items():
+        this_index = epochs.events[:, 2] == v
+        sample_weight[this_index] = class_weights[k]
+
+    sample_weight_a = sample_weight[condition_a_mask]
+    sample_weight_b = sample_weight[condition_b_mask]
+    sample_weight = np.r_[sample_weight_b, sample_weight_a]
+    return sample_weight
+
+
+def _prepare_y(epochs, condition_a, condition_b):
+    condition_a_mask = mne_epochs_key_to_index(epochs, condition_a)
+    condition_b_mask = mne_epochs_key_to_index(epochs, condition_b)
+
+    y = np.r_[np.zeros(condition_b_mask.sum()),
+              np.ones(condition_a_mask.sum())]
+
+    return y, condition_a_mask, condition_b_mask

@@ -25,6 +25,8 @@ from nice.measures import TimeLockedTopography, read_ert
 from nice.measures import TimeLockedContrast, read_erc
 
 from nice.measures import WindowDecoding, read_wd
+from nice.measures import TimeDecoding, read_td
+from nice.measures import GeneralizationDecoding, read_gd
 
 from nice.epochs import EpochsEnhancer
 
@@ -53,6 +55,17 @@ def _get_data():
                         preload=preload, decim=3)
     return EpochsEnhancer(epochs)
 
+
+def _get_decoding_data():
+    raw = mne.io.Raw(raw_fname, add_eeg_ref=False, proj=False)
+    events = mne.read_events(event_name)
+    picks = mne.pick_types(raw.info, meg=True, eeg=True, stim=True,
+                           ecg=True, eog=True, include=['STI 014'],
+                           exclude='bads')[::15]
+
+    epochs = mne.Epochs(raw, events, event_id_2, tmin, tmax, picks=picks,
+                        preload=preload, decim=3)
+    return EpochsEnhancer(epochs)
 
 clean_warning_registry()  # really clean warning stack
 
@@ -178,16 +191,7 @@ def test_wsmi():
 
 def test_window_decoding():
     """Test computation of window decoding"""
-
-    raw = mne.io.Raw(raw_fname, add_eeg_ref=False, proj=False)
-    events = mne.read_events(event_name)
-    picks = mne.pick_types(raw.info, meg=True, eeg=True, stim=True,
-                           ecg=True, eog=True, include=['STI 014'],
-                           exclude='bads')[::15]
-
-    epochs = mne.Epochs(raw, events, event_id_2, tmin, tmax, picks=picks,
-                        preload=preload, decim=3)
-    epochs = EpochsEnhancer(epochs)
+    epochs = _get_decoding_data()
     decoding_params = dict(
         sample_weight='auto',
         clf=None,
@@ -202,6 +206,33 @@ def test_window_decoding():
     _base_io_test(wd, epochs, read_wd)
 
 
+def test_time_decoding():
+    """Test computation of time decoding"""
+    epochs = _get_decoding_data()
+    decoding_params = dict(
+        clf=None,
+        cv=10,
+        n_jobs=1
+    )
+
+    td = TimeDecoding(tmin=0.1, tmax=0.2, condition_a='a',
+                      condition_b='b', decoding_params=decoding_params)
+    _base_io_test(td, epochs, read_td)
+
+
+def test_generalization_decoding():
+    """Test computation of time decoding"""
+    epochs = _get_decoding_data()
+    decoding_params = dict(
+        clf=None,
+        cv=10,
+        n_jobs=1
+    )
+
+    gd = GeneralizationDecoding(tmin=0.1, tmax=0.2, condition_a='a',
+                                condition_b='b',
+                                decoding_params=decoding_params)
+    _base_io_test(gd, epochs, read_gd)
 
 if __name__ == "__main__":
     import nose
