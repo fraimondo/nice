@@ -42,7 +42,7 @@ class PowerSpectralDensity(BaseMeasure):
         else:
             unit = 'power'
 
-        self.data_ = psds
+        self.data_ = this_psds
         self.freqs_ = this_freqs
         self.unit_ = unit
 
