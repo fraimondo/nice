@@ -1,5 +1,6 @@
 from mne.epochs import Epochs
-from mne.time_frequency import compute_epochs_psd
+# from mne.time_frequency import compute_epochs_psd
+from .algorithms.spectral import psd_welch
 
 
 class EpochsEnhancer(Epochs):
@@ -10,7 +11,8 @@ class EpochsEnhancer(Epochs):
         self.psds_ = None
         if psds_params is None:
             psds_params = dict(tmin=None, tmax=None, n_fft=256, n_overlap=0,
-                               n_jobs=1, fmin=0, fmax=epochs.info['sfreq'] / 2)
+                               nperseg=256, n_jobs=1, fmin=0,
+                               fmax=epochs.info['sfreq'] / 2)
         self.psds_params_ = psds_params
 
     def get_psds(self):
@@ -21,6 +23,7 @@ class EpochsEnhancer(Epochs):
 
             fmin = self.psds_params_.get('fmin', None)
             fmax = self.psds_params_.get('fmax', None)
+            nperseg = self.psds_params_.get('nperseg', None)
             n_overlap = self.psds_params_.get('n_overlap', None)
             n_fft = self.psds_params_.get('n_fft', None)
             n_jobs = self.psds_params_.get('n_jobs', None)
@@ -28,9 +31,9 @@ class EpochsEnhancer(Epochs):
             # check n_fft VS segment size in final MNE implementation ping
             # @agramfort + yousra
             # XXX XXX XXX (porny triple triple XXX)
-            self.psds_, self.freqs_ = compute_epochs_psd(
-                epochs=this_epochs, fmin=fmin, fmax=fmax,
-                n_jobs=n_jobs, n_overlap=n_overlap, n_fft=n_fft)
+            self.psds_, self.freqs_ = psd_welch(
+                this_epochs, fmin=fmin, fmax=fmax, n_jobs=n_jobs,
+                n_overlap=n_overlap, nperseg=nperseg, n_fft=n_fft)
         return self.psds_, self.freqs_
 
     def _check_freq_range(self, fmin, fmax):

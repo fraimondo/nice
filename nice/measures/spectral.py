@@ -28,12 +28,12 @@ class PowerSpectralDensity(BaseMeasure):
     def _fit(self, epochs):
         epochs._check_freq_range(self.fmin, self.fmax)
         psds, freqs = epochs.get_psds()
-        mask = float_mask(freqs, 1., 4.)
+        mask = float_mask(freqs, self.fmin, self.fmax)
         this_psds = psds[:, :, mask]
         this_freqs = freqs[mask]
         if self.normalize:
-            this_psds /= this_psds.sum(axis=-1)[..., None]
-            assert np.allclose(this_psds.sum(axis=-1), 1.)
+            this_psds = this_psds / psds.sum(axis=-1)[..., None]
+            # assert np.allclose(this_psds.sum(axis=-1), 1.)
         if self.dB is True and self.normalize is False:
             this_psds = 10 * np.log10(this_psds)
             unit = 'dB'

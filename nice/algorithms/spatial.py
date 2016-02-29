@@ -1,8 +1,3 @@
-# Authors: Denis A. Engemann <denis.engemann@gmail.com>
-#          Martin Billinger <martin.billinger@tugraz.at>
-#
-# License: BSD (3-clause)
-
 import numpy as np
 from numpy.polynomial.legendre import legval
 from scipy.linalg import inv
