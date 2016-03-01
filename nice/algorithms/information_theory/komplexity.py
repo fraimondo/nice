@@ -3,13 +3,11 @@ import numpy as np
 import zlib
 
 from mne import pick_types
-from mne.utils import logger, verbose, _time_mask
+from mne.utils import logger, _time_mask
 
 
-@verbose
 def epochs_compute_komplexity(epochs, nbins, tmin=None, tmax=None,
-                              backend='python', method_params=None,
-                              verbose=None):
+                              backend='python', method_params=None):
     """Compute complexity (K)
 
     Parameters
@@ -43,6 +41,15 @@ def epochs_compute_komplexity(epochs, nbins, tmin=None, tmax=None,
         from ..optimizations.ompk import komplexity as _ompk_k
         nthreads = (method_params['nthreads']
                     if 'nthreads' in method_params else 1)
+        if nthreads == 'auto':
+            try:
+                import mkl
+                nthreads = mkl.get_max_threads()
+                logger.info(
+                    'Autodetected number of threads {}'.format(nthreads))
+            except:
+                logger.info('Cannot autodetect number of threads')
+                nthreads = 1
         start_time = time.time()
         komp = _ompk_k(data, nbins, nthreads)
         elapsed_time = time.time() - start_time

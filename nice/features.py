@@ -26,6 +26,7 @@ class Features(OrderedDict):
                 epochs._check_freq_range(meas.fmin, meas.fmax)
 
         for meas in self.values():
+            logger.info('Fitting {}'.format(meas._get_title()))
             meas.fit(epochs)
         self.ch_info_ = list(self.values())[0].ch_info_
 
@@ -59,10 +60,10 @@ class Features(OrderedDict):
     def reduce_to_scalar(self, measure_params, picks=None):
         logger.info('Reducing to scalars')
         self._check_measure_params_keys(measure_params)
-        if picks:  # XXX think if info is needed down-stream
-            info = mne.io.pick.pick_info(self.ch_info_, picks, copy=True)
-        else:
-            info = self.ch_info_
+        # if picks:  # XXX think if info is needed down-stream
+        #     info = mne.io.pick.pick_info(self.ch_info_, picks, copy=True)
+        # else:
+        #     info = self.ch_info_
         n_measures = len(self)
         out = np.empty(n_measures, dtype=np.float64)
         for ii, meas in enumerate(self.values()):

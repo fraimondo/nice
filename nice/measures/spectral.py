@@ -49,3 +49,46 @@ class PowerSpectralDensity(BaseMeasure):
 
 def read_psd(fname, comment='default'):
     return PowerSpectralDensity._read(fname, comment=comment)
+
+
+class PowerSpectralDensitySummary(BaseMeasure):
+    """docstring for PSD"""
+
+    def __init__(self, percentile, tmin=None, tmax=None, fmin=0, fmax=np.inf,
+                 comment='default'):
+        BaseMeasure.__init__(self, tmin=None, tmax=None, comment=comment)
+        self.fmin = fmin
+        self.fmax = fmax
+        self.percentile = percentile
+
+    @property
+    def _axis_map(self):
+        return OrderedDict([
+            ('epochs', 0),
+            ('channels', 1)
+        ])
+
+    def _fit(self, epochs):
+        epochs._check_freq_range(self.fmin, self.fmax)
+        psds, freqs = epochs.get_psds()
+        mask = float_mask(freqs, self.fmin, self.fmax)
+        this_psds = psds[:, :, mask]
+        this_freqs = freqs[mask]
+        this_psds = this_psds / this_psds.sum(axis=-1)[..., None]
+
+        cumulative_spectra = np.cumsum(this_psds, axis=-1)
+        idx = np.argmin((cumulative_spectra - self.percentile) ** 2, axis=-1)
+
+        if psds.ndim > 2:
+            data = np.zeros_like(idx, dtype=np.float)
+            for iepoch in range(cumulative_spectra.shape[0]):
+                data[iepoch] = freqs[idx[iepoch]]
+        else:
+            data = this_freqs[idx]
+        self.data_ = data
+        self.freqs_ = this_freqs
+        self.unit_ = 'Hz'
+
+
+def read_psds(fname, comment='default'):
+    return PowerSpectralDensitySummary._read(fname, comment=comment)

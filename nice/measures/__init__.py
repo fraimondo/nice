@@ -1,4 +1,5 @@
 from . spectral import PowerSpectralDensity, read_psd
+from . spectral import PowerSpectralDensitySummary, read_psds
 from . time_locked import ContingentNegativeVariation, read_cnv
 from . information_theory import KolmogorovComplexity, read_komplexity
 from . information_theory import PermutationEntropy, read_pe

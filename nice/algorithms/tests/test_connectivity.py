@@ -134,7 +134,6 @@ def test_wsmi():
     assert_array_almost_equal(test_smi_2_result, smi_data)
     assert_array_almost_equal(test_wsmi_2_result, wsmi_data)
 
-
     # Test wsmi in c
     wsmi_data, smi_data, symb, count = jwsmi(test_data_t8, 3, 8, wts, 4)
     assert_array_equal(test_data_symb, symb)

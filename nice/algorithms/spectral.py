@@ -49,6 +49,16 @@ def _psd_welch(x, sfreq, fmin=0, fmax=np.inf, nperseg=256, n_fft=256,
     n_times = x.shape[-1]
     x = x.reshape(-1, n_times)
 
+    if n_jobs == 'auto':
+        try:
+            import multiprocessing as mp
+            n_jobs = mp.cpu_count()
+            logger.info(
+                'Autodetected number of jobs {}'.format(n_jobs))
+        except:
+            logger.info('Cannot autodetect number of jobs')
+            n_jobs = 1
+
     # Prep the PSD
     # XXX: Dont use _check_nfft with n_fft but nperseg
     nperseg, n_overlap = _check_nfft(n_times, nperseg, n_overlap)
@@ -73,8 +83,7 @@ def _psd_welch(x, sfreq, fmin=0, fmax=np.inf, nperseg=256, n_fft=256,
 
 
 def psd_welch(inst, fmin=0, fmax=np.inf, tmin=None, tmax=None, n_fft=256,
-              n_overlap=0, nperseg=256, picks=None, proj=False, n_jobs=1,
-              verbose=None):
+              n_overlap=0, nperseg=256, picks=None, proj=False, n_jobs='auto'):
     """Compute the power spectral density (PSD) using Welch's method.
 
     Calculates periodigrams for a sliding window over the

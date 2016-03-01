@@ -4,12 +4,11 @@ from itertools import permutations
 from scipy.signal import butter, filtfilt
 
 import mne
-from mne.utils import logger, verbose, _time_mask
+from mne.utils import logger, _time_mask
 
 
-@verbose
 def epochs_compute_pe(epochs, kernel, tau, tmin=None, tmax=None,
-                      backend='python', verbose=None):
+                      backend='python'):
     """Compute Permutation Entropy (PE)
 
     Parameters
