@@ -8,7 +8,7 @@ all: $(MODULES)
 
 %.so: %.c $(SOURCES)
 	$(PYTHON) setup.py build
-	cp build/lib.*/$@ .
+	cp build/lib.*/*.so $@
 	cp $@ ../
 
 clean:
@@ -26,7 +26,7 @@ ifeq "$(UNAME)" "Darwin"
 	LDFLAGS= $(MKLROOT)/lib/libmkl_intel_lp64.a $(MKLROOT)/lib/libmkl_core.a $(MKLROOT)/lib/libmkl_sequential.a  -openmp-link static
 endif
 ifeq "$(UNAME)" "Linux"
-	
+
 	CFLAGS = -fPIC
 	LDFLAGS= $(MKLROOT)/lib/intel64/libmkl_intel_lp64.a $(MKLROOT)/lib/intel64/libmkl_core.a $(MKLROOT)/lib/intel64/libmkl_sequential.a  -openmp-link static
 endif

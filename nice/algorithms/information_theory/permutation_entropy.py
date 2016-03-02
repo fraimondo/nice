@@ -44,14 +44,14 @@ def epochs_compute_pe(epochs, kernel, tau, tmin=None, tmax=None,
     if backend == 'python':
         logger.info("Performing symbolic transformation")
         sym, count = _symb_python(fdata, kernel, tau)
-        pe = np.nan_to_num(-np.nansum(count * np.log2(count), axis=1))
+        pe = np.nan_to_num(-np.nansum(count * np.log(count), axis=1))
     elif backend == 'c':
         from ..optimizations.jivaro import pe as jpe
         pe, sym = jpe(fdata, kernel, tau)
     else:
         raise ValueError('backend %s not supported for PE'
                          % backend)
-    nsym = pe.shape[1]
+    nsym = math.factorial(kernel)
     pe = pe / np.log(nsym)
     return pe, sym
 

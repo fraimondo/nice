@@ -293,7 +293,7 @@ static PyObject * jivaro_pe(PyObject *self, PyObject *args) {
 			for (symbol = 0; symbol < nsymbols; symbol++) {
 				value = MAT3D(c_count, channel, symbol, trial, nchannels, nsymbols);
 				if (value > 0) {
-					sum += value * log2(value);
+					sum += value * log(value);
 				}
 			}
 			*(double *)PyArray_GETPTR2(count, channel, trial) = -sum;

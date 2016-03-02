@@ -8,7 +8,7 @@ all: $(MODULES)
 
 %.so: %.c $(SOURCES)
 	$(PYTHON) setup.py build
-	cp build/lib.*/$@ .
+	cp build/lib.*/*.so $@
 	cp $@ ../
 
 

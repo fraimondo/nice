@@ -42,14 +42,15 @@ def epochs_compute_wsmi(epochs, kernel, tau, tmin=None, tmax=None,
     if n_jobs == 'auto':
         try:
             import multiprocessing as mp
-            n_jobs = mp.cpu_count()
+            import mkl
+            n_jobs = int(mp.cpu_count() / mkl.get_max_threads())
             logger.info(
                 'Autodetected number of jobs {}'.format(n_jobs))
         except:
             logger.info('Cannot autodetect number of jobs')
             n_jobs = 1
 
-    csd_epochs = compute_csd(epochs)
+    csd_epochs = compute_csd(epochs, n_jobs=n_jobs)
 
     freq = csd_epochs.info['sfreq']
 

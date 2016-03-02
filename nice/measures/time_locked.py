@@ -93,11 +93,20 @@ def read_erc(fname, epochs, comment='default'):
 
 
 class WindowDecoding(BaseMeasure):
-    def __init__(self, tmin, tmax, condition_a, condition_b, decoding_params,
-                 comment='default'):
+    def __init__(self, tmin, tmax, condition_a, condition_b,
+                 decoding_params=None, comment='default'):
         BaseMeasure.__init__(self, tmin, tmax, comment)
         self.condition_a = condition_a
         self.condition_b = condition_b
+        if decoding_params is None:
+            decoding_params = dict(
+                sample_weight='auto',
+                n_jobs='auto',
+                cv=None,
+                clf=None,
+                labels=None,
+                random_state=None,
+            )
         self.decoding_params = decoding_params
 
     def _fit(self, epochs):

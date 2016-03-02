@@ -15,6 +15,7 @@ from sklearn.base import clone
 # from sklearn.utils import check_random_state
 
 from mne.parallel import parallel_func
+from mne.utils import logger
 
 
 # def get_roc(x, y, class_a, class_b):
@@ -35,7 +36,7 @@ def _decode_window_one_fold(clf, X, y, train, test, sample_weight):
     return this_probas, prediction, score
 
 
-def decode_window(X, y, clf=None, cv=None, sample_weight='auto', n_jobs=1,
+def decode_window(X, y, clf=None, cv=None, sample_weight='auto', n_jobs='auto',
                   random_state=None, labels=None):
     """Decode entire window
 
@@ -65,6 +66,15 @@ def decode_window(X, y, clf=None, cv=None, sample_weight='auto', n_jobs=1,
 
         The score at each resampling iteration.
     """
+    if n_jobs == 'auto':
+        try:
+            import multiprocessing as mp
+            n_jobs = mp.cpu_count()
+            logger.info(
+                'Autodetected number of jobs {}'.format(n_jobs))
+        except:
+            logger.info('Cannot autodetect number of jobs')
+            n_jobs = 1
     if clf is None:
         scaler = StandardScaler()
         svc = SVC(C=1, kernel='linear', probability=True)
@@ -72,8 +82,8 @@ def decode_window(X, y, clf=None, cv=None, sample_weight='auto', n_jobs=1,
         clf = Pipeline([('scaler', scaler), ('anova', transform), ('svc', svc)])
     if cv is None:
         if labels is None:
-            cv = StratifiedKFold(n_folds=int(min(10, len(y) / 2)), y=y, shuffle=True,
-                                 random_state=random_state)
+            cv = StratifiedKFold(n_folds=int(min(10, len(y) / 2)), y=y,
+                                 shuffle=True, random_state=random_state)
         else:
             cv = LabelKFold(labels, n_folds=10)
 
