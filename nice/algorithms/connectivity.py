@@ -159,6 +159,7 @@ def _calc_g(cosang, stiffnes=4, num_lterms=50):
     num_lterms : int
         number of Legendre terms to evaluate.
     """
+    logger.info('Calculating G')
     factors = [(2 * n + 1) / (n ** stiffnes * (n + 1) ** stiffnes * 4 * np.pi)
                for n in range(1, num_lterms + 1)]
     return legval(cosang, [0] + factors)
@@ -177,6 +178,7 @@ def _calc_h(cosang, stiffnes=4, num_lterms=50):
     num_lterms : int
         number of Legendre terms to evaluate.
     """
+    logger.info('Calculating H')
     factors = [(2 * n + 1) /
                (n ** (stiffnes - 1) * (n + 1) ** (stiffnes - 1) * 4 * np.pi)
                for n in range(1, num_lterms + 1)]
@@ -184,6 +186,7 @@ def _calc_h(cosang, stiffnes=4, num_lterms=50):
 
 
 def _prepare_G(G, lambda2):
+    logger.info('Preparing G')
     # regularize if desired
     if lambda2 is None:
         lambda2 = 1e-5
@@ -271,6 +274,7 @@ def compute_csd(inst, picks=None, g_matrix=None, h_matrix=None,
     if len(picks) == 0:
         raise ValueError('No EEG channels found.')
 
+    logger.info('Computing CSD')
     if ((g_matrix is None or h_matrix is None) or
        (lookup_table_fname is not None)):
         pos = _extract_positions(inst, picks=picks)
@@ -278,7 +282,7 @@ def compute_csd(inst, picks=None, g_matrix=None, h_matrix=None,
     G = _calc_g(np.dot(pos, pos.T)) if g_matrix is None else g_matrix
     H = _calc_h(np.dot(pos, pos.T)) if h_matrix is None else h_matrix
     G_precomputed = _prepare_G(G, lambda2)
-
+    logger.info('Applying G and H')
     if isinstance(out, mne.epochs._BaseEpochs):
         parallel, my_csd, _ = mne.parallel.parallel_func(_compute_csd, n_jobs)
         data = np.asarray(parallel(my_csd(e[picks],
@@ -290,4 +294,5 @@ def compute_csd(inst, picks=None, g_matrix=None, h_matrix=None,
         out.data = _compute_csd(out.data[picks], G_precomputed=G_precomputed,
                                 H=H, head=head)
     mne.pick_info(out.info, picks, copy=False)
+    logger.info('CSD Done')
     return out
