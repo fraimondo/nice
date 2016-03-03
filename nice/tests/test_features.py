@@ -104,7 +104,7 @@ def test_collecting_feature():
             {k: v for k, v in vars(v1).items() if not k.endswith('_')},
             {k: v for k, v in vars(v2).items() if not k.endswith('_')})
     pe = PermutationEntropy().fit(epochs)
-    features.add_measure(pe)
+    features._add_measure(pe)
 
     tmp = _TempDir()
     tmp_fname = tmp + '/test_features.hdf5'
