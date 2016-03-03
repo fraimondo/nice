@@ -93,7 +93,7 @@ test_data_symb_2 = np.reshape(np.array([
     [1, 2],
 ]), [n_channels, 2, 1])
 
-p = 1.0/2
+p = 1.0 / 2
 
 test_data_count_2 = np.reshape(np.array([
     [p, p, 0, 0, 0, 0],
@@ -104,14 +104,17 @@ test_data_count_2 = np.reshape(np.array([
     [0, p, p, 0, 0, 0],
 ]), [6, 6, 1])
 
+val = 2 * (-p * np.log(p))
+
 test_data_pe_2 = np.array([
-    [1.0],
-    [1.0],
-    [1.0],
-    [1.0],
-    [1.0],
-    [1.0]
+    [val],
+    [val],
+    [val],
+    [val],
+    [val],
+    [val]
 ])
+
 
 def test_pe():
     """Test permutation entropy"""
@@ -135,7 +138,6 @@ def test_pe():
     pe, symb = jpe(test_data_t8, 3, 8)
     assert_array_equal(test_data_symb, symb)
     assert_array_equal(test_data_pe, pe)
-
 
     symb, count = _symb_python(test_data_t8_2, kernel=3, tau=8)
     assert_array_equal(test_data_symb_2, symb)

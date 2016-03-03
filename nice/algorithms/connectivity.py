@@ -50,7 +50,10 @@ def epochs_compute_wsmi(epochs, kernel, tau, tmin=None, tmax=None,
             logger.info('Cannot autodetect number of jobs')
             n_jobs = 1
 
-    csd_epochs = compute_csd(epochs, n_jobs=n_jobs)
+    if 'bypass_csd' in method_params and method_params['bypass_csd'] is True:
+        csd_epochs = epochs
+    else:
+        csd_epochs = compute_csd(epochs, n_jobs=n_jobs)
 
     freq = csd_epochs.info['sfreq']
 

@@ -147,13 +147,14 @@ def test_wsmi():
     assert_array_equal(test_smi_2_result, smi_data)
     assert_array_equal(test_wsmi_2_result, wsmi_data)
 
+    pmp = {'bypass_csd': True}
     # Test wsmi across backends
-    wsmi_1, smi_1, sym_1, count_1 = epochs_compute_wsmi(epochs, kernel=3, tau=8,
-                                                        backend='python')
-    mp = {'nthreads': 1}
-    wsmi_2, smi_2, sym_2, count_2 = epochs_compute_wsmi(epochs, kernel=3, tau=8,
-                                                        backend='openmp',
-                                                        method_params=mp)
+    wsmi_1, smi_1, sym_1, count_1 = epochs_compute_wsmi(
+        epochs, kernel=3, tau=8, backend='python', method_params=pmp)
+
+    mp = {'nthreads': 1, 'bypass_csd': True}
+    wsmi_2, smi_2, sym_2, count_2 = epochs_compute_wsmi(
+        epochs, kernel=3, tau=8, backend='openmp', method_params=mp)
 
     assert_array_equal(sym_1, sym_2)
     assert_array_equal(count_1, count_2)
@@ -161,24 +162,25 @@ def test_wsmi():
     assert_almost_equal(smi_1, smi_2)
 
     epochs.drop_epochs([0])
-    wsmi_3, smi_3, sym_3, count_3 = epochs_compute_wsmi(epochs, kernel=3, tau=8,
-                                                        backend='python')
+    wsmi_3, smi_3, sym_3, count_3 = epochs_compute_wsmi(
+        epochs, kernel=3, tau=8, backend='python', method_params=pmp)
     mp.update(nthreads=1)
-    wsmi_4, smi_4, sym_4, count_4 = epochs_compute_wsmi(epochs, kernel=3, tau=8,
-                                                        backend='openmp',
-                                                        method_params=mp)
+    wsmi_4, smi_4, sym_4, count_4 = epochs_compute_wsmi(
+        epochs, kernel=3, tau=8, backend='openmp', method_params=mp)
+
     assert_array_equal(sym_3, sym_4)
     assert_array_equal(count_3, count_4)
     assert_almost_equal(wsmi_3, wsmi_4)
     assert_almost_equal(smi_3, smi_4)
 
     # Test with more threads
-    wsmi_1, smi_1, sym_1, count_1 = epochs_compute_wsmi(epochs, kernel=3, tau=8,
-                                                        backend='python')
+    wsmi_1, smi_1, sym_1, count_1 = epochs_compute_wsmi(
+        epochs, kernel=3, tau=8, backend='python', method_params=pmp)
+
     mp.update(nthreads=14)
-    wsmi_2, smi_2, sym_2, count_2 = epochs_compute_wsmi(epochs, kernel=3, tau=8,
-                                                        backend='openmp',
-                                                        method_params=mp)
+
+    wsmi_2, smi_2, sym_2, count_2 = epochs_compute_wsmi(
+        epochs, kernel=3, tau=8, backend='openmp', method_params=mp)
 
     assert_array_equal(sym_1, sym_2)
     assert_array_equal(count_1, count_2)
@@ -186,12 +188,12 @@ def test_wsmi():
     assert_almost_equal(smi_1, smi_2)
 
     epochs.drop_epochs([0])
-    wsmi_3, smi_3, sym_3, count_3 = epochs_compute_wsmi(epochs, kernel=3, tau=8,
-                                                        backend='python')
+    wsmi_3, smi_3, sym_3, count_3 = epochs_compute_wsmi(
+        epochs, kernel=3, tau=8, backend='python', method_params=pmp)
+
     mp.update(nthreads=3)
-    wsmi_4, smi_4, sym_4, count_4 = epochs_compute_wsmi(epochs, kernel=3, tau=8,
-                                                        backend='openmp',
-                                                        method_params=mp)
+    wsmi_4, smi_4, sym_4, count_4 = epochs_compute_wsmi(
+        epochs, kernel=3, tau=8, backend='openmp', method_params=mp)
     assert_array_equal(sym_3, sym_4)
     assert_array_equal(count_3, count_4)
     assert_almost_equal(wsmi_3, wsmi_4)

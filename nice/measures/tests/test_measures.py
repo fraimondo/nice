@@ -184,7 +184,8 @@ def test_pe():
 def test_wsmi():
     """Test computation of wsmi measure"""
     epochs = _get_data()[:2]
-    wsmi = SymbolicMutualInformation()
+    method_params = {'bypass_csd': True}
+    wsmi = SymbolicMutualInformation(method_params=method_params)
     _base_io_test(wsmi, epochs, read_smi)
     _base_reduction_test(wsmi, epochs)
 
