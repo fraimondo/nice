@@ -16,7 +16,7 @@ class Features(OrderedDict):
     def __init__(self, measures):
         OrderedDict.__init__(self)
         for meas in measures:
-            self.add_measure(meas)
+            self._add_measure(meas)
         if self._check_measures_fit():
             self.ch_info_ = list(self.values())[0].ch_info_
 
@@ -79,8 +79,17 @@ class Features(OrderedDict):
         for meas in self.values():
             meas.save(fname, overwrite='update')
 
-    def add_measure(self, measure):
+    def _add_measure(self, measure):
         self[measure._get_title()] = measure
+
+    def add_measure(self, measure):
+        if self._check_measures_fit():
+            raise ValueError('Adding a measure to an already fit collection '
+                             'is not allowed')
+        if not isinstance(measure, list):
+            measure = [measure]
+        for meas in measure:
+            self._add_measure(meas)
 
     def _check_measure_params_keys(self, measure_params):
         for key in measure_params.keys():
