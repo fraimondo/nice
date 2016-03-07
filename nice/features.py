@@ -38,6 +38,14 @@ class Features(OrderedDict):
                 break
         return is_fit
 
+    def topo_names(self):
+        info = self.ch_info_
+        measure_names = [
+            meas._get_title() for meas in self.values() if isin_info(
+                info_source=info, info_target=meas.ch_info_) and
+            'channels' in meas._axis_map]
+        return measure_names
+
     def reduce_to_topo(self, measure_params, picks=None):
         logger.info('Reducing to topographies')
         self._check_measure_params_keys(measure_params)
@@ -45,9 +53,10 @@ class Features(OrderedDict):
             info = mne.io.pick.pick_info(self.ch_info_, picks, copy=True)
         else:
             info = self.ch_info_
-        measures_to_topo = [meas for meas in self.values() if
-                            isin_info(info_source=info,
-                                      info_target=meas.ch_info_)]
+        measures_to_topo = [
+            meas for meas in self.values() if isin_info(
+                info_source=info, info_target=meas.ch_info_) and
+            'channels' in meas._axis_map]
         n_measures = len(measures_to_topo)
         n_channels = info['nchan'] - len(set(info['bads']))
         out = np.empty((n_measures, n_channels), dtype=np.float64)

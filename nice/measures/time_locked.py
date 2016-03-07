@@ -127,7 +127,7 @@ class WindowDecoding(BaseMeasure):
     @property
     def _axis_map(self):
         return OrderedDict([
-            ('scores', 0),
+            ('folds', 0),
         ])
 
     def _prepare_window_decoding(self, epochs):
