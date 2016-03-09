@@ -9,17 +9,9 @@ from mne.io.pick import pick_info, pick_types
 import h5py
 
 
-class BaseMeasure(object):
-    """Base class for M/EEG measures"""
-
-    def __init__(self, tmin, tmax, comment):
-        self.tmin = tmin
-        self.tmax = tmax
+class BaseContainer(object):
+    def __init__(self, comment):
         self.comment = comment
-
-    @property
-    def _axis_map(self):
-        raise NotImplementedError('This should be in every measure')
 
     def _save_info(self, fname, overwrite=False):
         has_ch_info = False
@@ -48,6 +40,26 @@ class BaseMeasure(object):
             title=_get_title(self.__class__, self.comment),
             overwrite=overwrite)
 
+    def _get_title(self):
+        return _get_title(self.__class__, self.comment)
+
+    @classmethod
+    def _read(cls, fname, comment='default'):
+        return _read_container(cls, fname, comment=comment)
+
+
+class BaseMeasure(BaseContainer):
+    """Base class for M/EEG measures"""
+
+    def __init__(self, tmin, tmax, comment):
+        BaseContainer.__init__(self, comment=comment)
+        self.tmin = tmin
+        self.tmax = tmax
+
+    @property
+    def _axis_map(self):
+        raise NotImplementedError('This should be in every measure')
+
     def fit(self, epochs):
         self._fit(epochs)
         self.ch_info_ = epochs.info
@@ -75,6 +87,20 @@ class BaseMeasure(object):
 
     def reduce_to_scalar(self, reduction_func, picks=None):
         return self._reduce_to(reduction_func, target='scalar', picks=picks)
+
+    def compress(self, reduction_func):
+        if not hasattr(self, 'data_'):
+            raise ValueError('You did not fit me. Do it again after fitting '
+                             'some data!')
+        if 'epochs' in self._axis_map:
+            axis = self._axis_map['epochs']
+            logger.info(
+                'Compressing {} on axis {} (epochs)'.format(
+                    self._get_title(), axis)
+            )
+            data = reduction_func(self.data_, axis=axis)
+            # Keep dimension
+            self.data_ = np.expand_dims(data, axis=axis)
 
     def _prepare_data(self, picks):
         data = self.data_
@@ -114,10 +140,6 @@ class BaseMeasure(object):
         data = np.transpose(data, permutation_list)
         return data, funcs
 
-    @classmethod
-    def _read(cls, fname, comment='default'):
-        return _read_measure(cls, fname, comment=comment)
-
 
 class BaseTimeLocked(BaseMeasure):
 
@@ -130,6 +152,11 @@ class BaseTimeLocked(BaseMeasure):
         self.epochs_ = epochs
         self.data_ = epochs.get_data()
         return self
+
+    def compress(self, reduction_func):
+        logger.info(
+            'TimeLocked measures cannot be compressed '
+            'epoch-wise ({})'.format(self._get_title()))
 
     def save(self, fname, overwrite=False):
         self._save_info(fname, overwrite=overwrite)
@@ -154,7 +181,7 @@ class BaseTimeLocked(BaseMeasure):
     @classmethod
     def _read(cls, fname, epochs, comment='default'):
         return _read_time_locked(cls, fname=fname, epochs=epochs,
-                                   comment=comment)
+                                 comment=comment)
 
     def _get_title(self):
         return _get_title(self.__class__, self.comment)
@@ -171,17 +198,19 @@ class BaseDecoding(BaseMeasure):
     def _get_title(self):
         return _get_title(self.__class__, self.comment)
 
+
 def _get_title(klass, comment):
-    if 'measure' in klass.__module__:
+    if issubclass(klass, BaseMeasure):
         kind = 'measure'
+    elif issubclass(klass, BaseContainer):
+        kind = 'container'
     else:
         raise NotImplementedError('Oh no-- what is this?')
-
     return '/'.join([
         'nice', kind, klass.__name__, comment])
 
 
-def _read_measure(klass, fname, comment='default'):
+def _read_container(klass, fname, comment='default'):
     data = read_hdf5(fname,  _get_title(klass, comment))
     init_params = {k: v for k, v in data.items() if not k.endswith('_')}
     attrs = {k: v for k, v in data.items() if k.endswith('_')}
@@ -199,7 +228,7 @@ def _check_epochs_consistency(info1, info2, shape1, shape2):
 
 
 def _read_time_locked(cls, fname, epochs, comment='default'):
-    out = _read_measure(cls, fname, comment=comment)
+    out = _read_container(cls, fname, comment=comment)
     shape1 = epochs.get_data().shape
     shape2 = out.shape_
     _check_epochs_consistency(out.ch_info_, epochs.info, shape1, shape2)

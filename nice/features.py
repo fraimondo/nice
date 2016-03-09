@@ -2,7 +2,7 @@ from collections import OrderedDict
 from .utils import h5_listdir
 from .externals.h5io import read_hdf5, write_hdf5
 from .measures.base import BaseMeasure, BaseTimeLocked
-from .measures.spectral import PowerSpectralDensity
+from .measures.spectral import BasePowerSpectralDensity, read_psd_estimator
 import sys
 import inspect
 import mne
@@ -22,8 +22,8 @@ class Features(OrderedDict):
 
     def fit(self, epochs):
         for meas in self.values():
-            if isinstance(meas, PowerSpectralDensity):
-                epochs._check_freq_range(meas.fmin, meas.fmax)
+            if isinstance(meas, BasePowerSpectralDensity):
+                meas._check_freq_time_range(epochs)
 
         for meas in self.values():
             logger.info('Fitting {}'.format(meas._get_title()))
@@ -81,6 +81,11 @@ class Features(OrderedDict):
             out[ii] = meas.reduce_to_scalar(**this_params)
 
         return out
+
+    def compress(self, reduction_func):
+        for meas in self.values():
+            if not isinstance(meas, BaseTimeLocked):
+                meas.compress(reduction_func)
 
     def save(self, fname, overwrite=False):
         write_hdf5(fname, list(self.keys()), title='nice/features/order',
@@ -157,6 +162,14 @@ def read_features(fname):
             tmin=epochs.pop('tmin'), event_id=epochs.pop('event_id'),
             events=epochs.pop('events'), reject=epochs.pop('reject'),
             flat=epochs.pop('flat'))
+    # Read all PowerSpectralDensityEstimator estimators
+    estimators = [k for k in contents if
+                  'nice/container/PowerSpectralDensityEstimator' in k]
+    all_estimators = {}
+    for estimator_name in estimators:
+        estimator_comment = estimator_name.split('/')[-1]
+        this_estimator = read_psd_estimator(fname, comment=estimator_comment)
+        all_estimators[estimator_comment] = this_estimator
     for content in measure_order:
         _, _, my_class_name, comment = content.split('/')
         my_class = measures_classes[my_class_name]
@@ -167,6 +180,10 @@ def read_features(fname):
                     'measure that depends on epochs but '
                     'I could not find any epochs in the file you gave me.')
             measures.append(my_class._read(fname, epochs, comment=comment))
+        elif issubclass(my_class, BasePowerSpectralDensity):
+            measures.append(
+                my_class._read(
+                    fname, estimators=all_estimators, comment=comment))
         elif issubclass(my_class, BaseMeasure):
             measures.append(my_class._read(fname, comment=comment))
         else:

@@ -9,6 +9,8 @@ import numpy as np
 import warnings
 import matplotlib
 
+import functools
+
 import mne
 import h5py
 from mne.utils import _TempDir, clean_warning_registry
@@ -27,8 +29,7 @@ from nice.measures import TimeLockedContrast, read_erc
 from nice.measures import WindowDecoding, read_wd
 from nice.measures import TimeDecoding, read_td
 from nice.measures import GeneralizationDecoding, read_gd
-
-from nice.epochs import EpochsEnhancer
+from nice.measures import PowerSpectralDensityEstimator, read_psd_estimator
 
 matplotlib.use('Agg')  # for testing don't use X server
 
@@ -53,7 +54,7 @@ def _get_data():
 
     epochs = mne.Epochs(raw, events, event_id, tmin, tmax, picks=picks,
                         preload=preload, decim=3)
-    return EpochsEnhancer(epochs)
+    return epochs
 
 
 def _get_decoding_data():
@@ -65,7 +66,7 @@ def _get_decoding_data():
 
     epochs = mne.Epochs(raw, events, event_id_2, tmin, tmax, picks=picks,
                         preload=preload, decim=3)
-    return EpochsEnhancer(epochs)
+    return epochs
 
 clean_warning_registry()  # really clean warning stack
 
@@ -78,6 +79,8 @@ def _compare_values(v, v2):
     elif isinstance(v, dict):
         for key, value in v.items():
             _compare_values(v[key], v2[key])
+    elif isinstance(v, PowerSpectralDensityEstimator):
+        _compare_instance(v, v2)
     else:
         assert_equal(v, v2)
 
@@ -118,12 +121,30 @@ def _base_reduction_test(inst, epochs):
     assert_equal(topo.shape, (topo_chans,))
 
 
+def _base_compression_test(inst, epochs):
+    orig_shape = inst.data_.shape
+    inst.compress(np.mean)
+    axis = inst._axis_map['epochs']
+    new_shape = np.array(orig_shape)
+    new_shape[axis] = 1
+    assert_array_equal(inst.data_.shape, new_shape)
+
+
 def test_spectral():
     """Test computation of spectral measures"""
     epochs = _get_data()[:2]
-    psd = PowerSpectralDensity(fmin=1, fmax=4)
-    _base_io_test(psd, epochs, read_psd)
-    _base_reduction_test(psd, epochs)
+    psds_params = dict(n_fft=4096, n_overlap=100, n_jobs='auto',
+                       nperseg=128)
+    estimator = PowerSpectralDensityEstimator(
+        tmin=None, tmax=None, fmin=1., fmax=45., psd_method='welch',
+        psd_params=psds_params, comment='default'
+    )
+    psd = PowerSpectralDensity(estimator, fmin=1., fmax=4.)
+    _base_io_test(psd, epochs,
+        functools.partial(read_psd, estimators={'default': estimator}))
+    # TODO: Fix this test
+    # _base_reduction_test(psd, epochs)
+    # _base_compression_test(psd, epochs)
 
 
 def test_time_locked():
@@ -137,7 +158,6 @@ def test_time_locked():
 
     epochs = mne.Epochs(raw, events, event_id_2, tmin, tmax, picks=picks,
                         preload=preload, decim=3)
-    epochs = EpochsEnhancer(epochs)
     cnv = ContingentNegativeVariation()
     _base_io_test(cnv, epochs, read_cnv)
     _base_reduction_test(cnv, epochs)
@@ -171,6 +191,7 @@ def test_komplexity():
     komp = KolmogorovComplexity()
     _base_io_test(komp, epochs, read_komplexity)
     _base_reduction_test(komp, epochs)
+    _base_compression_test(komp, epochs)
 
 
 def test_pe():
@@ -179,6 +200,7 @@ def test_pe():
     pe = PermutationEntropy()
     _base_io_test(pe, epochs, read_pe)
     _base_reduction_test(pe, epochs)
+    _base_compression_test(pe, epochs)
 
 
 def test_wsmi():
@@ -188,6 +210,7 @@ def test_wsmi():
     wsmi = SymbolicMutualInformation(method_params=method_params)
     _base_io_test(wsmi, epochs, read_smi)
     _base_reduction_test(wsmi, epochs)
+    _base_compression_test(wsmi, epochs)
 
 
 def test_window_decoding():

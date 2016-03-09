@@ -20,8 +20,8 @@ from nice.measures import PermutationEntropy
 from nice.measures import SymbolicMutualInformation
 from nice.measures import TimeLockedTopography
 from nice.measures import TimeLockedContrast
+from nice.measures import PowerSpectralDensityEstimator
 
-from nice.epochs import EpochsEnhancer
 from nice import Features, read_features
 
 
@@ -48,7 +48,7 @@ def _get_data():
 
     epochs = mne.Epochs(raw, events, event_id, tmin, tmax, picks=picks,
                         preload=preload, decim=3)
-    return EpochsEnhancer(epochs)
+    return epochs
 
 
 clean_warning_registry()  # really clean warning stack
@@ -70,8 +70,14 @@ def _compare_instance(inst1, inst2):
 def test_collecting_feature():
     """Test computation of spectral measures"""
     epochs = _get_data()[:2]
+    psds_params = dict(n_fft=4096, n_overlap=100, n_jobs='auto',
+                       nperseg=128)
+    estimator = PowerSpectralDensityEstimator(
+        tmin=None, tmax=None, fmin=1., fmax=45., psd_method='welch',
+        psd_params=psds_params, comment='default'
+    )
     measures = [
-        PowerSpectralDensity(fmin=1, fmax=4),
+        PowerSpectralDensity(estimator=estimator, fmin=1, fmax=4),
         ContingentNegativeVariation(),
         TimeLockedTopography(tmin=0.1, tmax=0.2),
         TimeLockedContrast(tmin=0.1, tmax=0.2, condition_a='a',
@@ -101,8 +107,10 @@ def test_collecting_feature():
     for ((k1, v1), (k2, v2)) in zip(features.items(), features2.items()):
         assert_equal(k1, k2)
         assert_equal(
-            {k: v for k, v in vars(v1).items() if not k.endswith('_')},
-            {k: v for k, v in vars(v2).items() if not k.endswith('_')})
+            {k: v for k, v in vars(v1).items() if not k.endswith('_') and
+             not k == 'estimator'},
+            {k: v for k, v in vars(v2).items() if not k.endswith('_') and
+             not k == 'estimator'})
     pe = PermutationEntropy().fit(epochs)
     features._add_measure(pe)
 
