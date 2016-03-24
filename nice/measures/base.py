@@ -119,6 +119,11 @@ class BaseMeasure(BaseContainer):
             if reduction_func is not None:
                 reduction_func = [i for i in reduction_func
                                   if i['axis'] != 'channels']
+        elif target == 'times':
+            time_axis = _axis_map.pop('times')
+            if reduction_func is not None:
+                reduction_func = [i for i in reduction_func
+                                  if i['axis'] != 'times']
 
         permutation_list = list()
         if reduction_func is None:
@@ -136,6 +141,8 @@ class BaseMeasure(BaseContainer):
 
         if target == 'topography':
             permutation_list.append(ch_axis)
+        elif target == 'times':
+            permutation_list.append(time_axis)
 
         data = np.transpose(data, permutation_list)
         return data, funcs
