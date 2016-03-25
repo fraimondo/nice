@@ -117,7 +117,7 @@ class PowerSpectralDensityEstimator(BaseContainer):
     @classmethod
     def _read(cls, fname, comment='default'):
         psde = _read_container(cls, fname, comment=comment)
-        psde.data_norm_ = psde.data_.sum(axis=-1)
+        psde.data_norm_ = psde.data_ / psde.data_.sum(axis=-1)[..., None]
         return psde
 
 
