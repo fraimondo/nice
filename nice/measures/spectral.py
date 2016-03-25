@@ -103,11 +103,11 @@ class PowerSpectralDensityEstimator(BaseContainer):
         self.psd_params.update(
             tmin=self.tmin, tmax=self.tmax, fmin=self.fmin, fmax=self.fmax)
         self.data_, self.freqs_ = function(epochs, **self.psd_params)
-        self.data_norm_ = self.data_.sum(axis=-1)
+        self.data_sum = self.data_.sum(axis=-1)
 
     def save(self, fname, overwrite=False):
         self._save_info(fname, overwrite=overwrite)
-        save_vars = self._get_save_vars(exclude=['ch_info_', 'data_norm_'])
+        save_vars = self._get_save_vars(exclude=['ch_info_', 'data_sum'])
         write_hdf5(
             fname,
             save_vars,
@@ -117,7 +117,7 @@ class PowerSpectralDensityEstimator(BaseContainer):
     @classmethod
     def _read(cls, fname, comment='default'):
         psde = _read_container(cls, fname, comment=comment)
-        psde.data_norm_ = psde.data_.sum(axis=-1)
+        psde.data_sum = psde.data_.sum(axis=-1)
         return psde
 
 
@@ -157,7 +157,7 @@ class PowerSpectralDensity(BasePowerSpectralDensity):
         end = np.searchsorted(freqs, self.fmax, 'right')
         this_psds = psds[:, :, start:end]
         if self.normalize:
-            this_psds = this_psds / self.estimator.data_norm_[:, picks, None]
+            this_psds = this_psds / self.estimator.data_sum[:, picks, None]
         if self.dB is True and self.normalize is False:
             this_psds = 10 * np.log10(this_psds)
         return this_psds
@@ -198,16 +198,16 @@ class PowerSpectralDensitySummary(BasePowerSpectralDensity):
     def _get_title(self):
         return _get_title(self.__class__, self.comment)
 
-
     def _prepare_data(self, picks):
         if picks is None:
             picks = Ellipsis
         psds = self.estimator.data_[:, picks, :]
         freqs = self.estimator.freqs_
-        mask = float_mask(freqs, self.fmin, self.fmax)
-        this_psds = psds[:, :, mask]
-        this_freqs = freqs[mask]
-        this_psds = this_psds / this_psds.sum(axis=-1)[..., None]
+        start = np.searchsorted(freqs, self.fmin, 'left')
+        end = np.searchsorted(freqs, self.fmax, 'right')
+        this_psds = psds[:, :, start:end]
+        this_freqs = freqs[start:end]
+        this_psds = this_psds / self.estimator.data_sum[..., None]
 
         cumulative_spectra = np.cumsum(this_psds, axis=-1)
         idx = np.argmin((cumulative_spectra - self.percentile) ** 2, axis=-1)
