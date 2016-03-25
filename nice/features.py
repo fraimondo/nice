@@ -163,6 +163,7 @@ def _reduce_to(inst, target, params):
         out = inst.reduce_to_scalar(**params)
     return out
 
+
 def _get_reduction_params(measure_params, meas):
     # XXX Check for typos and issue warnings
     full = '{}/{}'.format(meas.__class__.__name__, meas.comment)

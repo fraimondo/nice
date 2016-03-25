@@ -103,6 +103,22 @@ class PowerSpectralDensityEstimator(BaseContainer):
         self.psd_params.update(
             tmin=self.tmin, tmax=self.tmax, fmin=self.fmin, fmax=self.fmax)
         self.data_, self.freqs_ = function(epochs, **self.psd_params)
+        self.data_norm_ = self.data_.sum(axis=-1)
+
+    def save(self, fname, overwrite=False):
+        self._save_info(fname, overwrite=overwrite)
+        save_vars = self._get_save_vars(exclude=['ch_info_', 'data_norm_'])
+        write_hdf5(
+            fname,
+            save_vars,
+            title=_get_title(self.__class__, self.comment),
+            overwrite=overwrite)
+
+    @classmethod
+    def _read(cls, fname, comment='default'):
+        psde = _read_container(cls, fname, comment=comment)
+        psde.data_norm_ = psde.data_.sum(axis=-1)
+        return psde
 
 
 def read_psd_estimator(fname, comment='default'):
@@ -137,13 +153,14 @@ class PowerSpectralDensity(BasePowerSpectralDensity):
             picks = Ellipsis
         psds = self.estimator.data_[:, picks, :]
         freqs = self.estimator.freqs_
-        mask = float_mask(freqs, self.fmin, self.fmax)
-        this_psds = psds[:, :, mask]
+        start = np.searchsorted(freqs, self.fmin, 'left')
+        end = np.searchsorted(freqs, self.fmax, 'right')
+        this_psds = psds[:, :, start:end]
         if self.normalize:
-            this_psds = this_psds / psds.sum(axis=-1)[..., None]
+            this_psds = this_psds / self.estimator.data_norm_[:, picks, None]
         if self.dB is True and self.normalize is False:
             this_psds = 10 * np.log10(this_psds)
-        return this_psds[:, picks, :]
+        return this_psds
 
     @classmethod
     def _read(cls, fname, estimators=None, comment='default'):
