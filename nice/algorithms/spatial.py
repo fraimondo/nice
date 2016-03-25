@@ -79,13 +79,27 @@ def _compute_csd(data, G_precomputed, H, head):
 
     Gi, TC, sgi = G_precomputed
 
-    for this_time in range(n_times):
-        Cp = np.dot(Gi, Z[:, this_time])  # compute preliminary C vector
-        c0 = np.sum(Cp) / sgi  # common constant across electrodes
-        C = Cp - np.dot(c0, TC.T)  # compute final C vector
-        for this_chan in range(n_channels):  # compute all CSDs ...
-            # ... and scale to head size
-            X[this_chan, this_time] = np.sum(C * H[this_chan].T) / head
+    Cp2 = np.dot(Gi, Z)
+    c02 = np.sum(Cp2, axis=0) / sgi
+    C2 = Cp2 - np.dot(TC[:, None], c02[None, :])
+    X = np.dot(C2.T, H).T / head
+    # for this_time in range(n_times):
+    #     # Gi = n_c x n_c
+    #     # Z = n_c
+    #     Cp = np.dot(Gi, Z[:, this_time])  # compute preliminary C vector
+    #     # Cp = n_c
+    #     # Sgi = scalar
+    #     c0 = np.sum(Cp) / sgi  # common constant across electrodes
+    #     # TC = n_c
+    #     # c0 = scalar
+    #     C = Cp - np.dot(c0, TC.T)  # compute final C vector
+    #     # C = n_c
+    #     for this_chan in range(n_channels):  # compute all CSDs ...
+    #         import pdb; pdb.set_trace()
+    #         # ... and scale to head size
+    #         # H = n_c
+    #         # head = scalar
+    #         X[this_chan, this_time] = np.sum(C * H[this_chan].T) / head
     return X
 
 
@@ -149,7 +163,6 @@ def epochs_compute_csd(inst, picks=None, g_matrix=None, h_matrix=None,
     G = _calc_g(np.dot(pos, pos.T)) if g_matrix is None else g_matrix
     H = _calc_h(np.dot(pos, pos.T)) if h_matrix is None else h_matrix
     G_precomputed = _prepare_G(G, lambda2)
-
     if isinstance(out, _BaseEpochs):
         parallel, my_csd, _ = parallel_func(_compute_csd, n_jobs)
         data = np.asarray(parallel(my_csd(e[picks],
