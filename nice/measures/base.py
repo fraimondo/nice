@@ -124,6 +124,11 @@ class BaseMeasure(BaseContainer):
             if reduction_func is not None:
                 reduction_func = [i for i in reduction_func
                                   if i['axis'] != 'times']
+        elif target == 'epochs':
+            epochs_axis = _axis_map.pop('epochs')
+            if reduction_func is not None:
+                reduction_func = [i for i in reduction_func
+                                  if i['axis'] != 'epochs']
 
         permutation_list = list()
         if reduction_func is None:
@@ -143,6 +148,8 @@ class BaseMeasure(BaseContainer):
             permutation_list.append(ch_axis)
         elif target == 'times':
             permutation_list.append(time_axis)
+        elif target == 'epochs':
+            permutation_list.append(epochs_axis)
 
         data = np.transpose(data, permutation_list)
         return data, funcs
