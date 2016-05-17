@@ -47,8 +47,7 @@ class Features(OrderedDict):
             'channels' in meas._axis_map]
         return measure_names
 
-
-    def reduce_to_topo(self, measure_params, picks=None):
+    def reduce_to_topo(self, measure_params):
         logger.info('Reducing to topographies')
         # if n_jobs == 'auto':
         #     try:
@@ -61,8 +60,9 @@ class Features(OrderedDict):
         #         n_jobs = 1
 
         self._check_measure_params_keys(measure_params)
-        if picks:  # XXX think if info is needed down-stream
-            info = mne.io.pick.pick_info(self.ch_info_, picks, copy=True)
+        ch_picks = self._check_measure_params_picks(measure_params)
+        if ch_picks is not None:  # XXX think if info is needed down-stream
+            info = mne.io.pick.pick_info(self.ch_info_, ch_picks, copy=True)
         else:
             info = self.ch_info_
         measures_to_topo = [
@@ -70,7 +70,10 @@ class Features(OrderedDict):
                 info_source=info, info_target=meas.ch_info_) and
             'channels' in meas._axis_map]
         n_measures = len(measures_to_topo)
-        n_channels = info['nchan'] - len(set(info['bads']))
+        if ch_picks is None:
+            n_channels = info['nchan']
+        else:
+            n_channels = len(ch_picks)
         out = np.empty((n_measures, n_channels), dtype=np.float64)
         # parallel, _reduce_to_topo, _ = parallel_func(_reduce_to, n_jobs)
         # out = np.asarray(parallel(_reduce_to_topo(
@@ -83,7 +86,7 @@ class Features(OrderedDict):
             out[ii] = meas.reduce_to_topo(**this_params)
         return out
 
-    def reduce_to_scalar(self, measure_params, picks=None):
+    def reduce_to_scalar(self, measure_params):
         logger.info('Reducing to scalars')
         # if n_jobs == 'auto':
         #     try:
@@ -153,6 +156,28 @@ class Features(OrderedDict):
                                  'the elements in this feature collection: '
                                  '{} is not a valid feature or class'
                                  .format(key))
+
+    def _check_measure_params_picks(self, measure_params):
+        # Check that if we pick channels, we do it the same way on every
+        # measure
+        all_picks = []
+        for key, params in measure_params.keys():
+            if 'picks' in params:
+                picks = params['picks']
+                if 'channels' in picks:
+                    all_picks.append(np.sort(picks['channels']))
+
+        first = None
+        if len(all_picks) > 0:
+            first = all_picks[0]
+        equal = True
+        for this_picks in all_picks[1:]:
+            equal = np.all(this_picks == first)
+            if not equal:
+                raise ValueError('Your picks are inconsistent among each other '
+                                 'element in this feature collection. Channels '
+                                 'picks should be the same')
+        return first
 
 
 # def _reduce_to(inst, target, params):
