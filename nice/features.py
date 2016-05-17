@@ -161,7 +161,7 @@ class Features(OrderedDict):
         # Check that if we pick channels, we do it the same way on every
         # measure
         all_picks = []
-        for key, params in measure_params.keys():
+        for key, params in measure_params.items():
             if 'picks' in params:
                 picks = params['picks']
                 if 'channels' in picks:
