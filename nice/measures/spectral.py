@@ -149,21 +149,22 @@ class PowerSpectralDensity(BasePowerSpectralDensity):
         return _get_title(self.__class__, self.comment)
 
     def _prepare_data(self, picks):
+        this_picks = {k: None for k in ['channels', 'epochs']}
         if picks is None:
-            picks = {k: None for k in ['channels', 'epochs']}
+            picks = {}
+        if 'frequency' in picks:
+            logger.warning('Picking in frequency axis is currently not '
+                           'supported. This will not have effect.')
+        this_picks.update(picks)
         freqs = self.estimator.freqs_
         start = np.searchsorted(freqs, self.fmin, 'left')
         end = np.searchsorted(freqs, self.fmax, 'right')
 
-        if 'frequency' in picks:
-            logger.warning('Picking in frequency axis is currently not '
-                           'supported. This will not have effect.')
-
-        ch_picks = picks['channels']
+        ch_picks = this_picks['channels']
         if ch_picks is None:
             ch_picks = Ellipsis
 
-        epochs_picks = picks['epochs']
+        epochs_picks = this_picks['epochs']
         if epochs_picks is None:
             epochs_picks = Ellipsis
 
@@ -214,17 +215,20 @@ class PowerSpectralDensitySummary(BasePowerSpectralDensity):
         return _get_title(self.__class__, self.comment)
 
     def _prepare_data(self, picks):
+        this_picks = {k: None for k in ['channels', 'epochs']}
         if picks is None:
-            picks = {k: None for k in ['channels', 'epochs']}
+            picks = {}
+        this_picks.update(picks)
+
         freqs = self.estimator.freqs_
         start = np.searchsorted(freqs, self.fmin, 'left')
         end = np.searchsorted(freqs, self.fmax, 'right')
 
-        ch_picks = picks['channels']
+        ch_picks = this_picks['channels']
         if ch_picks is None:
             ch_picks = Ellipsis
 
-        epochs_picks = picks['epochs']
+        epochs_picks = this_picks['epochs']
         if epochs_picks is None:
             epochs_picks = Ellipsis
 

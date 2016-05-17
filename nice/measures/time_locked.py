@@ -50,11 +50,13 @@ class TimeLockedTopography(BaseTimeLocked):
         ])
 
     def _prepare_data(self, picks):
+        this_picks = {k: None for k in ['times', 'channels', 'epochs']}
         if picks is None:
-            picks = {k: None for k in ['times', 'channels', 'epochs']}
+            picks = {}
+        this_picks.update(picks)
 
         # Pick Times based on original times
-        time_picks = picks['times']
+        time_picks = this_picks['times']
         time_mask = _time_mask(self.epochs_.times, self.tmin, self.tmax)
         if time_picks is not None:
             picks_mask = np.zeros(len(time_mask), dtype=np.bool)
@@ -62,7 +64,7 @@ class TimeLockedTopography(BaseTimeLocked):
             time_mask = np.logical_and(time_mask, picks_mask)
 
         # Pick epochs based on original indices
-        epochs_picks = picks['epochs']
+        epochs_picks = this_picks['epochs']
         this_epochs = self.epochs_
         if epochs_picks is not None:
             this_epochs = this_epochs[epochs_picks]
@@ -71,7 +73,7 @@ class TimeLockedTopography(BaseTimeLocked):
             this_epochs = this_epochs[self.subset]
 
         # Pick channels based on original indices
-        ch_picks = picks['channels']
+        ch_picks = this_picks['channels']
         if ch_picks is None:
             ch_picks = pick_types(this_epochs.info, eeg=True, meg=True)
 
