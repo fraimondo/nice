@@ -161,7 +161,7 @@ def test_wsmi():
     assert_almost_equal(wsmi_1, wsmi_2)
     assert_almost_equal(smi_1, smi_2)
 
-    epochs.drop_epochs([0])
+    epochs.drop([0])
     wsmi_3, smi_3, sym_3, count_3 = epochs_compute_wsmi(
         epochs, kernel=3, tau=8, backend='python', method_params=pmp)
     mp.update(nthreads=1)
@@ -187,7 +187,7 @@ def test_wsmi():
     assert_almost_equal(wsmi_1, wsmi_2)
     assert_almost_equal(smi_1, smi_2)
 
-    epochs.drop_epochs([0])
+    epochs.drop([0])
     wsmi_3, smi_3, sym_3, count_3 = epochs_compute_wsmi(
         epochs, kernel=3, tau=8, backend='python', method_params=pmp)
 

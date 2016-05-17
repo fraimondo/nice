@@ -235,7 +235,7 @@ def test_time_decoding():
     epochs = _get_decoding_data()
     decoding_params = dict(
         clf=None,
-        cv=10,
+        cv=2,
         n_jobs=1
     )
 
@@ -249,7 +249,7 @@ def test_generalization_decoding():
     epochs = _get_decoding_data()
     decoding_params = dict(
         clf=None,
-        cv=10,
+        cv=2,
         n_jobs=1
     )
 

@@ -105,9 +105,10 @@ class BaseMeasure(BaseContainer):
     def _prepare_data(self, picks):
         data = self.data_
         if picks is not None:
-            ch_axis = self._axis_map['channels']
-            data = (data.swapaxes(ch_axis, 0)[picks, ...]
-                        .swapaxes(0, ch_axis))
+            for axis, ax_picks in picks.items():
+                this_axis = self._axis_map[axis]
+                data = (data.swapaxes(this_axis, 0)[ax_picks, ...]
+                            .swapaxes(0, this_axis))
         return data
 
     def _prepare_reduction(self, reduction_func, target, picks):

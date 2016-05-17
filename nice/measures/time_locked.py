@@ -50,13 +50,32 @@ class TimeLockedTopography(BaseTimeLocked):
         ])
 
     def _prepare_data(self, picks):
-        time_mask = _time_mask(self.epochs_.times, self.tmin, self.tmax)
-        subset = self.subset
-        picks = (pick_types(self.epochs_.info, eeg=True, meg=True)
-                 if not picks else picks)
-        return ((self.epochs_[subset] if subset else self.epochs_)
-                .get_data()[:, picks][..., time_mask])
+        if picks is None:
+            picks = {k: None for k in ['times', 'channels', 'epochs']}
 
+        # Pick Times based on original times
+        time_picks = picks['times']
+        time_mask = _time_mask(self.epochs_.times, self.tmin, self.tmax)
+        if time_picks is not None:
+            picks_mask = np.zeros(len(time_mask), dtype=np.bool)
+            picks_mask[time_picks] = True
+            time_mask = np.logical_and(time_mask, picks_mask)
+
+        # Pick epochs based on original indices
+        epochs_picks = picks['epochs']
+        this_epochs = self.epochs_
+        if epochs_picks is not None:
+            this_epochs = this_epochs[epochs_picks]
+
+        if self.subset:
+            this_epochs = this_epochs[self.subset]
+
+        # Pick channels based on original indices
+        ch_picks = picks['channels']
+        if ch_picks is None:
+            ch_picks = pick_types(this_epochs.info, eeg=True, meg=True)
+
+        return this_epochs.get_data()[:, ch_picks][..., time_mask]
 
 def read_ert(fname, epochs, comment='default'):
     return TimeLockedTopography._read(fname, epochs=epochs, comment=comment)

@@ -150,14 +150,29 @@ class PowerSpectralDensity(BasePowerSpectralDensity):
 
     def _prepare_data(self, picks):
         if picks is None:
-            picks = Ellipsis
+            picks = {k: None for k in ['channels', 'epochs']}
         freqs = self.estimator.freqs_
         start = np.searchsorted(freqs, self.fmin, 'left')
         end = np.searchsorted(freqs, self.fmax, 'right')
+
+        if 'frequency' in picks:
+            logger.warning('Picking in frequency axis is currently not '
+                           'supported. This will not have effect.')
+
+        ch_picks = picks['channels']
+        if ch_picks is None:
+            ch_picks = Ellipsis
+
+        epochs_picks = picks['epochs']
+        if epochs_picks is None:
+            epochs_picks = Ellipsis
+
         if self.normalize:
-            this_psds = self.estimator.data_norm_[:, :, start:end][:, picks, :]
+            this_psds = self.estimator.data_norm_[
+                ..., start:end][:, ch_picks][epochs_picks]
         else:
-            this_psds = self.estimator.data_[:, :, start:end][:, picks, :]
+            this_psds = self.estimator.data_[
+                ..., start:end][:, ch_picks][epochs_picks]
         if self.dB is True and self.normalize is False:
             this_psds = 10 * np.log10(this_psds)
         return this_psds
@@ -200,11 +215,21 @@ class PowerSpectralDensitySummary(BasePowerSpectralDensity):
 
     def _prepare_data(self, picks):
         if picks is None:
-            picks = Ellipsis
+            picks = {k: None for k in ['channels', 'epochs']}
         freqs = self.estimator.freqs_
         start = np.searchsorted(freqs, self.fmin, 'left')
         end = np.searchsorted(freqs, self.fmax, 'right')
-        this_psds = self.estimator.data_norm_[:, :, start:end][:, picks, :]
+
+        ch_picks = picks['channels']
+        if ch_picks is None:
+            ch_picks = Ellipsis
+
+        epochs_picks = picks['epochs']
+        if epochs_picks is None:
+            epochs_picks = Ellipsis
+
+        this_psds = self.estimator.data_norm_[
+            ..., start:end][:, ch_picks][epochs_picks]
         this_freqs = freqs[start:end]
 
         cumulative_spectra = np.cumsum(this_psds, axis=-1)
