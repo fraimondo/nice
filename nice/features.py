@@ -61,6 +61,7 @@ class Features(OrderedDict):
 
         self._check_measure_params_keys(measure_params)
         ch_picks = self._check_measure_params_picks(measure_params)
+        ch_picks = mne.pick_types(self.ch_info_, eeg=True, meg=True)
         if ch_picks is not None:  # XXX think if info is needed down-stream
             info = mne.io.pick.pick_info(self.ch_info_, ch_picks, copy=True)
         else:
