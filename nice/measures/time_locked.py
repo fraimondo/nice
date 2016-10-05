@@ -2,7 +2,7 @@ from collections import Counter, OrderedDict
 
 import numpy as np
 
-from .base import BaseMeasure, BaseTimeLocked, _read_container
+from .base import (BaseMeasure, BaseTimeLocked, _read_container)
 
 from ..recipes.time_locked import epochs_compute_cnv
 from ..utils import mne_epochs_key_to_index
@@ -49,11 +49,18 @@ class TimeLockedTopography(BaseTimeLocked):
             ('times', 2)
         ])
 
-    def _prepare_data(self, picks):
+    def _prepare_data(self, picks, target):
         this_picks = {k: None for k in ['times', 'channels', 'epochs']}
+        if picks is not None:
+            if any([x not in this_picks.keys() for x in picks.keys()]):
+                raise ValueError('Picking is not compatible for {}'.format(
+                    self._get_title()))
         if picks is None:
             picks = {}
         this_picks.update(picks)
+        to_preserve = self._get_preserve_axis(target)
+        if to_preserve is not None:
+            this_picks[to_preserve] = None
 
         # Pick Times based on original times
         time_picks = this_picks['times']
@@ -78,6 +85,7 @@ class TimeLockedTopography(BaseTimeLocked):
             ch_picks = pick_types(this_epochs.info, eeg=True, meg=True)
 
         return this_epochs.get_data()[:, ch_picks][..., time_mask]
+
 
 def read_ert(fname, epochs, comment='default'):
     return TimeLockedTopography._read(fname, epochs=epochs, comment=comment)

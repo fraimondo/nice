@@ -72,6 +72,19 @@ class BaseMeasure(BaseContainer):
     def _get_title(self):
         return _get_title(self.__class__, self.comment)
 
+    def _get_preserve_axis(self, target):
+        to_preserve = None
+        if target == 'topography':
+            to_preserve = 'channels'
+        elif target == 'times':
+            to_preserve = 'times'
+        elif target == 'epochs':
+            to_preserve = 'epochs'
+        if to_preserve is not None and to_preserve not in self._axis_map.keys():
+            raise ValueError('Cannot reduce {} to {}'.format(
+                self._get_title(), target))
+        return to_preserve
+
     def _reduce_to(self, reduction_func, target, picks):
         if not hasattr(self, 'data_'):
             raise ValueError('You did not fit me. Do it again after fitting '
@@ -102,34 +115,32 @@ class BaseMeasure(BaseContainer):
             # Keep dimension
             self.data_ = np.expand_dims(data, axis=axis)
 
-    def _prepare_data(self, picks):
+    def _prepare_data(self, picks, target):
         data = self.data_
+        to_preserve = self._get_preserve_axis(target)
         if picks is not None:
+            if any([x not in self._axis_map for x in picks.keys()]):
+                raise ValueError('Picking is not compatible for {}'.format(
+                    self._get_title()))
             for axis, ax_picks in picks.items():
-                this_axis = self._axis_map[axis]
-                data = (data.swapaxes(this_axis, 0)[ax_picks, ...]
-                            .swapaxes(0, this_axis))
+                if axis == to_preserve:
+                    continue
+                if ax_picks is not None:
+                    this_axis = self._axis_map[axis]
+                    data = (data.swapaxes(this_axis, 0)[ax_picks, ...]
+                                .swapaxes(0, this_axis))
         return data
 
     def _prepare_reduction(self, reduction_func, target, picks):
-        data = self._prepare_data(picks)
+        data = self._prepare_data(picks, target)
         _axis_map = self._axis_map
         funcs = list()
-        if target == 'topography':
-            ch_axis = _axis_map.pop('channels')
+        axis_to_preserve = self._get_preserve_axis(target)
+        if axis_to_preserve is not None:
+            removed_axis = _axis_map.pop(axis_to_preserve)
             if reduction_func is not None:
                 reduction_func = [i for i in reduction_func
-                                  if i['axis'] != 'channels']
-        elif target == 'times':
-            time_axis = _axis_map.pop('times')
-            if reduction_func is not None:
-                reduction_func = [i for i in reduction_func
-                                  if i['axis'] != 'times']
-        elif target == 'epochs':
-            epochs_axis = _axis_map.pop('epochs')
-            if reduction_func is not None:
-                reduction_func = [i for i in reduction_func
-                                  if i['axis'] != 'epochs']
+                                  if i['axis'] != axis_to_preserve]
 
         permutation_list = list()
         if reduction_func is None:
@@ -144,14 +155,8 @@ class BaseMeasure(BaseContainer):
         else:
             raise ValueError('Run `python -c "import this"` to see '
                              'why we will not tolerate these things')
-
-        if target == 'topography':
-            permutation_list.append(ch_axis)
-        elif target == 'times':
-            permutation_list.append(time_axis)
-        elif target == 'epochs':
-            permutation_list.append(epochs_axis)
-
+        if axis_to_preserve is not None:
+            permutation_list.append(removed_axis)
         data = np.transpose(data, permutation_list)
         return data, funcs
 

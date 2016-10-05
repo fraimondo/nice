@@ -8,7 +8,7 @@ import numpy as np
 from mne.utils import _time_mask as float_mask
 from mne.utils import logger
 
-from .base import BaseMeasure, BaseContainer, _get_title, _read_container
+from .base import (BaseMeasure, BaseContainer, _get_title, _read_container)
 from ..algorithms.spectral import psd_welch
 from ..externals.h5io import write_hdf5, read_hdf5
 
@@ -148,14 +148,22 @@ class PowerSpectralDensity(BasePowerSpectralDensity):
     def _get_title(self):
         return _get_title(self.__class__, self.comment)
 
-    def _prepare_data(self, picks):
+    def _prepare_data(self, picks, target):
         this_picks = {k: None for k in ['channels', 'epochs']}
+        if picks is not None:
+            if any([x not in this_picks.keys() for x in picks.keys()]):
+                raise ValueError('Picking is not compatible for {}'.format(
+                    self._get_title()))
         if picks is None:
             picks = {}
         if 'frequency' in picks:
             logger.warning('Picking in frequency axis is currently not '
                            'supported. This will not have effect.')
         this_picks.update(picks)
+        to_preserve = self._get_preserve_axis(target)
+        if to_preserve is not None:
+            this_picks[to_preserve] = None
+
         freqs = self.estimator.freqs_
         start = np.searchsorted(freqs, self.fmin, 'left')
         end = np.searchsorted(freqs, self.fmax, 'right')
@@ -214,11 +222,21 @@ class PowerSpectralDensitySummary(BasePowerSpectralDensity):
     def _get_title(self):
         return _get_title(self.__class__, self.comment)
 
-    def _prepare_data(self, picks):
+    def _prepare_data(self, picks, target):
         this_picks = {k: None for k in ['channels', 'epochs']}
+        if picks is not None:
+            if any([x not in this_picks.keys() for x in picks.keys()]):
+                raise ValueError('Picking is not compatible for {}'.format(
+                    self._get_title()))
         if picks is None:
             picks = {}
+        if 'frequency' in picks:
+            logger.warning('Picking in frequency axis is currently not '
+                           'supported. This will not have effect.')
         this_picks.update(picks)
+        to_preserve = self._get_preserve_axis(target)
+        if to_preserve is not None:
+            this_picks[to_preserve] = None
 
         freqs = self.estimator.freqs_
         start = np.searchsorted(freqs, self.fmin, 'left')

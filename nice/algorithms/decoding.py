@@ -87,7 +87,7 @@ def decode_window(X, y, clf=None, cv=None, sample_weight='auto', n_jobs='auto',
         else:
             cv = LabelKFold(labels, n_folds=10)
 
-    if sample_weight == 'auto':
+    if isinstance(sample_weight, str) and sample_weight == 'auto':
         sample_weight = np.zeros(len(y), dtype=float)
         for this_y in np.unique(y):
             this_mask = (y == this_y)

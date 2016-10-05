@@ -64,7 +64,7 @@ def _symb_python(signal, nbins):
     """Compute symbolic transform"""
     ssignal = np.sort(signal)
     items = signal.shape[0]
-    first = items / 10
+    first = int(items / 10)
     last = items - first if first > 1 else items - 1
     lower = ssignal[first]
     upper = ssignal[last]

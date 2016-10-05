@@ -49,16 +49,6 @@ class Features(OrderedDict):
 
     def reduce_to_topo(self, measure_params):
         logger.info('Reducing to topographies')
-        # if n_jobs == 'auto':
-        #     try:
-        #         import multiprocessing as mp
-        #         n_jobs = mp.cpu_count()
-        #         logger.info(
-        #             'Autodetected number of jobs {}'.format(n_jobs))
-        #     except:
-        #         logger.info('Cannot autodetect number of jobs')
-        #         n_jobs = 1
-
         self._check_measure_params_keys(measure_params)
         ch_picks = self._check_measure_params_picks(measure_params)
         ch_picks = mne.pick_types(self.ch_info_, eeg=True, meg=True)
@@ -76,11 +66,6 @@ class Features(OrderedDict):
         else:
             n_channels = len(ch_picks)
         out = np.empty((n_measures, n_channels), dtype=np.float64)
-        # parallel, _reduce_to_topo, _ = parallel_func(_reduce_to, n_jobs)
-        # out = np.asarray(parallel(_reduce_to_topo(
-        #     meas, target='topography',
-        #     params=_get_reduction_params(measure_params, meas)
-        # ) for meas in measures_to_topo))
         for ii, meas in enumerate(measures_to_topo):
             logger.info('Reducing {}'.format(meas._get_title()))
             this_params = _get_reduction_params(measure_params, meas)
@@ -89,28 +74,9 @@ class Features(OrderedDict):
 
     def reduce_to_scalar(self, measure_params):
         logger.info('Reducing to scalars')
-        # if n_jobs == 'auto':
-        #     try:
-        #         import multiprocessing as mp
-        #         n_jobs = mp.cpu_count()
-        #         logger.info(
-        #             'Autodetected number of jobs {}'.format(n_jobs))
-        #     except:
-        #         logger.info('Cannot autodetect number of jobs')
-        #         n_jobs = 1
-
         self._check_measure_params_keys(measure_params)
-        # if picks:  # XXX think if info is needed down-stream
-        #     info = mne.io.pick.pick_info(self.ch_info_, picks, copy=True)
-        # else:
-            # info = self.ch_info_
         n_measures = len(self)
         out = np.empty(n_measures, dtype=np.float64)
-        # parallel, _reduce_to_scalar, _ = parallel_func(_reduce_to, n_jobs)
-        # out = np.asarray(parallel(_reduce_to_scalar(
-        #     meas, target='scalar',
-        #     params=_get_reduction_params(measure_params, meas)
-        # ) for meas in self.values()))
         for ii, meas in enumerate(self.values()):
             logger.info('Reducing {}'.format(meas._get_title()))
             this_params = _get_reduction_params(measure_params, meas)

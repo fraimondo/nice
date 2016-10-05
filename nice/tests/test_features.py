@@ -10,7 +10,7 @@ import warnings
 import matplotlib
 
 import mne
-from mne.utils import _TempDir, clean_warning_registry
+from mne.utils import _TempDir
 
 # our imports
 from nice.measures import PowerSpectralDensity
@@ -41,17 +41,15 @@ preload = True
 
 def _get_data():
     raw = mne.io.Raw(raw_fname, add_eeg_ref=False, proj=False)
+    raw.info['lowpass'] = 70.  # To avoid warning
     events = mne.read_events(event_name)
     picks = mne.pick_types(raw.info, meg=True, eeg=True, stim=True,
                            ecg=True, eog=True, include=['STI 014'],
                            exclude='bads')[::15]
 
     epochs = mne.Epochs(raw, events, event_id, tmin, tmax, picks=picks,
-                        preload=preload, decim=3)
+                        preload=preload, decim=3, add_eeg_ref=False)
     return epochs
-
-
-clean_warning_registry()  # really clean warning stack
 
 
 def _compare_instance(inst1, inst2):

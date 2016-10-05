@@ -2,7 +2,7 @@
 
 import os.path as op
 
-from nose.tools import assert_equal, assert_true
+from nose.tools import assert_equal, assert_true, assert_raises
 
 from numpy.testing import assert_array_equal
 import numpy as np
@@ -13,7 +13,7 @@ import functools
 
 import mne
 import h5py
-from mne.utils import _TempDir, clean_warning_registry
+from mne.utils import _TempDir
 
 # our imports
 from nice.measures import PowerSpectralDensity, read_psd
@@ -47,28 +47,28 @@ preload = True
 
 def _get_data():
     raw = mne.io.Raw(raw_fname, add_eeg_ref=False, proj=False)
+    raw.info['lowpass'] = 70.  # To avoid warning
     events = mne.read_events(event_name)
     picks = mne.pick_types(raw.info, meg=True, eeg=True, stim=True,
                            ecg=True, eog=True, include=['STI 014'],
                            exclude='bads')[::15]
 
     epochs = mne.Epochs(raw, events, event_id, tmin, tmax, picks=picks,
-                        preload=preload, decim=3)
+                        preload=preload, decim=3, add_eeg_ref=False)
     return epochs
 
 
 def _get_decoding_data():
     raw = mne.io.Raw(raw_fname, add_eeg_ref=False, proj=False)
+    raw.info['lowpass'] = 70.  # To avoid warning
     events = mne.read_events(event_name)
     picks = mne.pick_types(raw.info, meg=True, eeg=True, stim=True,
                            ecg=True, eog=True, include=['STI 014'],
                            exclude='bads')[::15]
 
     epochs = mne.Epochs(raw, events, event_id_2, tmin, tmax, picks=picks,
-                        preload=preload, decim=3)
+                        preload=preload, decim=3, add_eeg_ref=False)
     return epochs
-
-clean_warning_registry()  # really clean warning stack
 
 
 def _compare_values(v, v2):
@@ -151,13 +151,14 @@ def test_time_locked():
     """Test computation of time locked measures"""
 
     raw = mne.io.Raw(raw_fname, add_eeg_ref=False, proj=False)
+    raw.info['lowpass'] = 70.  # To avoid warning
     events = mne.read_events(event_name)
     picks = mne.pick_types(raw.info, meg=True, eeg=True, stim=True,
                            ecg=True, eog=True, include=['STI 014'],
                            exclude='bads')[::15]
 
     epochs = mne.Epochs(raw, events, event_id_2, tmin, tmax, picks=picks,
-                        preload=preload, decim=3)
+                        preload=preload, decim=3, add_eeg_ref=False)
     cnv = ContingentNegativeVariation()
     _base_io_test(cnv, epochs, read_cnv)
     _base_reduction_test(cnv, epochs)
@@ -257,6 +258,233 @@ def test_generalization_decoding():
                                 condition_b='b',
                                 decoding_params=decoding_params)
     _base_io_test(gd, epochs, read_gd)
+
+
+picking_data = np.zeros((3, 4, 5), dtype=np.float)
+for i in range(4):
+    picking_data[:, i, :] = np.array([
+        [1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [11, 12, 13, 14, 15]
+    ]) * pow(10, i)
+
+# 3 Epochs - 4 channels, 5 samples
+# array([[
+#     [1., 2., 3., 4., 5.],
+#     [10., 20., 30., 40., 50.],
+#     [100., 200., 300., 400., 500.],
+#     [1000., 2000., 3000., 4000., 5000.]
+# ], [
+#     [6., 7., 8., 9., 10.],
+#     [60., 70., 80., 90., 100.],
+#     [600., 700., 800., 900., 1000.],
+#     [6000., 7000., 8000., 9000., 10000.]
+# ], [
+#     [11., 12., 13., 14., 15.],
+#     [110., 120., 130., 140., 150.],
+#     [1100., 1200., 1300., 1400., 1500.],
+#     [11000., 12000., 13000., 14000., 15000.]
+# ])
+
+
+def test_picking():
+    """Test picking axis when reducing"""
+    epochs = _get_data()[:3]
+    epochs = epochs.pick_channels(epochs.ch_names[:4])
+    epochs.crop(0, 0.004 * 5)
+    epochs._data = picking_data
+
+    psds_params = dict(n_fft=4096, n_overlap=100, n_jobs='auto',
+                       nperseg=128)
+    estimator = PowerSpectralDensityEstimator(
+        tmin=None, tmax=None, fmin=1., fmax=5., psd_method='welch',
+        psd_params=psds_params, comment='default'
+    )
+    psd = PowerSpectralDensity(estimator, fmin=1., fmax=5., dB=False)
+
+    method_params = {'bypass_csd': True}
+    wsmi = SymbolicMutualInformation(method_params=method_params)
+    wsmi.data_ = picking_data.transpose(1, 2, 0)
+
+    ert = TimeLockedTopography(tmin=0, tmax=0.004 * 5)
+    ert.fit(epochs)
+
+    psd.data_ = picking_data
+    psd.estimator.data_ = picking_data
+    psd.estimator.data_norm_ = picking_data
+    psd.estimator.freqs_ = np.array([1., 2., 3., 4., 5.])
+
+    extreme_picks = {
+        'channels': np.array([0, 3]),
+        'times': np.array([0, 4]),
+        'epochs': np.array([0, 2])
+    }
+
+    red_fun = [
+        {'axis': 'epochs', 'function': np.sum},
+        {'axis': 'times', 'function': np.sum},
+        {'axis': 'channels', 'function': np.sum},
+    ]
+
+    psd_extreme_picks = {
+        'channels': np.array([0, 3]),
+        'epochs': np.array([0, 2])
+    }
+
+    psd_red_fun = [
+        {'axis': 'epochs', 'function': np.sum},
+        {'axis': 'frequency', 'function': np.sum},
+        {'axis': 'channels', 'function': np.sum},
+    ]
+
+    wsmi_red_fun = [
+        {'axis': 'epochs', 'function': np.sum},
+        {'axis': 'channels_y', 'function': np.sum},
+        {'axis': 'channels', 'function': np.sum},
+    ]
+
+    wsmi_extreme_picks = {
+        'channels': np.array([0, 3]),
+        'channels_y': np.array([0, 4]),
+        'epochs': np.array([0, 2])
+    }
+
+    extreme_topo_expected = np.array(
+        [12 + 20., 120 + 200., 1200 + 2000., 12000 + 20000.])
+    extreme_topo_obtained = ert.reduce_to_topo(red_fun, extreme_picks)
+    assert_array_equal(extreme_topo_obtained, extreme_topo_expected)
+
+    assert_raises(
+        ValueError, wsmi.reduce_to_topo, wsmi_red_fun, extreme_picks)
+    extreme_topo_obtained = wsmi.reduce_to_topo(
+        wsmi_red_fun, wsmi_extreme_picks)
+    assert_array_equal(extreme_topo_obtained, extreme_topo_expected)
+
+    extreme_topo_expected = np.array([80., 800., 8000., 80000.])
+    extreme_topo_obtained = psd.reduce_to_topo(psd_red_fun, psd_extreme_picks)
+    assert_array_equal(extreme_topo_obtained, extreme_topo_expected)
+
+    extreme_scalar_expected = 12 + 20. + 12000 + 20000.
+    extreme_scalar_obtained = ert.reduce_to_scalar(red_fun, extreme_picks)
+    assert_equal(extreme_scalar_obtained, extreme_scalar_expected)
+
+    extreme_scalar_obtained = wsmi.reduce_to_scalar(
+        wsmi_red_fun, wsmi_extreme_picks)
+    assert_equal(extreme_scalar_obtained, extreme_scalar_expected)
+
+    extreme_scalar_expected = 80. + 80000.
+    extreme_scalar_obtained = psd.reduce_to_scalar(
+        psd_red_fun, psd_extreme_picks)
+    assert_equal(extreme_scalar_obtained, extreme_scalar_expected)
+
+    extreme_time_expected = np.array(
+        [12 + 12000., 14 + 14000., 16 + 16000., 18 + 18000., 20 + 20000.])
+    extreme_time_obtained = ert._reduce_to(red_fun, 'times', extreme_picks)
+    assert_array_equal(extreme_time_obtained, extreme_time_expected)
+
+    assert_raises(
+        ValueError, psd._reduce_to, psd_red_fun, 'times', extreme_picks)
+
+    picks = {
+        'channels': np.array([1, 3]),
+        'times': np.array([1, 3, 4]),
+        'epochs': np.array([0, 1])
+    }
+
+    psd_picks = {
+        'channels': np.array([1, 3]),
+        'epochs': np.array([0, 1])
+    }
+
+    wsmi_picks = {
+        'channels': np.array([1, 3]),
+        'channels_y': np.array([1, 3, 4]),
+        'epochs': np.array([0, 1])
+    }
+
+    topo_expected = np.array(
+        [9 + 13 + 15., 90 + 130 + 150., 900 + 1300 + 1500,
+         9000 + 13000 + 15000.])
+    topo_obtained = ert.reduce_to_topo(red_fun, picks)
+    assert_array_equal(topo_obtained, topo_expected)
+    topo_obtained = wsmi.reduce_to_topo(wsmi_red_fun, wsmi_picks)
+    assert_array_equal(topo_obtained, topo_expected)
+
+    topo_expected = np.array(
+        [7 + 9 + 11 + 13 + 15., 70 + 90 + 110 + 130 + 150.,
+         700 + 900 + 1100 + 1300 + 1500,
+         7000 + 9000 + 11000 + 13000 + 15000.])
+    topo_obtained = psd.reduce_to_topo(psd_red_fun, psd_picks)
+    assert_array_equal(topo_obtained, topo_expected)
+
+    scalar_expected = 90 + 130 + 150. + 9000 + 13000 + 15000.
+    scalar_obtained = ert.reduce_to_scalar(red_fun, picks)
+    assert_equal(scalar_obtained, scalar_expected)
+    scalar_obtained = wsmi.reduce_to_scalar(wsmi_red_fun, wsmi_picks)
+    assert_equal(scalar_obtained, scalar_expected)
+
+    scalar_expected = 550. + 55000.
+    scalar_obtained = psd.reduce_to_scalar(psd_red_fun, psd_picks)
+    assert_equal(scalar_obtained, scalar_expected)
+
+    time_expected = np.array(
+        [70 + 7000., 90 + 9000., 110 + 11000., 130 + 13000., 150 + 15000.])
+    time_obtained = ert._reduce_to(red_fun, 'times', picks)
+    assert_array_equal(time_obtained, time_expected)
+
+    channel_pick = {
+        'channels': np.array([1]),
+        'times': np.array([2, 3]),
+        'epochs': None
+    }
+
+    psd_channel_pick = {
+        'channels': np.array([1]),
+        'epochs': None
+    }
+
+    wsmi_channel_pick = {
+        'channels': np.array([1]),
+        'channels_y': np.array([2, 3]),
+        'epochs': None
+    }
+
+    topo_expected = np.array([
+        3 + 8 + 13. + 4 + 9 + 14.,
+        30 + 80 + 130. + 40 + 90 + 140.,
+        300 + 800 + 1300 + 400 + 900 + 1400.,
+        3000 + 8000 + 13000 + 4000 + 9000 + 14000.])
+    topo_obtained = ert.reduce_to_topo(red_fun, channel_pick)
+    assert_array_equal(topo_obtained, topo_expected)
+    topo_obtained = wsmi.reduce_to_topo(wsmi_red_fun, wsmi_channel_pick)
+    assert_array_equal(topo_obtained, topo_expected)
+
+    topo_expected = np.array([
+        1 + 6 + 11. + 2 + 7 + 12 + 3 + 8 + 13. + 4 + 9 + 14. + 5 + 10 + 15,
+        10 + 60 + 110 + 20 + 70 + 120 + 30 + 80 +
+        130. + 40 + 90 + 140. + 50 + 100 + 150,
+        100 + 600 + 1100 + 200 + 700 + 1200 +
+        300 + 800 + 1300 + 400 + 900 + 1400. + 500 + 1000 + 1500,
+        1000 + 6000 + 11000 + 2000 + 7000 + 12000 +
+        3000 + 8000 + 13000 + 4000 + 9000 + 14000. + 5000 + 10000 + 15000])
+    topo_obtained = psd.reduce_to_topo(psd_red_fun, psd_channel_pick)
+    assert_array_equal(topo_obtained, topo_expected)
+
+    scalar_expected = 30 + 80 + 130. + 40 + 90 + 140
+    scalar_obtained = ert.reduce_to_scalar(red_fun, channel_pick)
+    assert_equal(scalar_obtained, scalar_expected)
+    scalar_obtained = wsmi.reduce_to_scalar(wsmi_red_fun, wsmi_channel_pick)
+    assert_equal(scalar_obtained, scalar_expected)
+
+    scalar_expected = (10 + 60 + 110 + 20 + 70 + 120 +
+                       30 + 80 + 130. + 40 + 90 + 140. + 50 + 100 + 150)
+    scalar_obtained = psd.reduce_to_scalar(psd_red_fun, psd_channel_pick)
+    assert_equal(scalar_obtained, scalar_expected)
+
+    time_expected = np.array(
+        [10 + 60 + 110., 20 + 70 + 120., 30 + 80 + 130., 40 + 90 + 140.,
+         50 + 100 + 150.])
+    time_obtained = ert._reduce_to(red_fun, 'times', channel_pick)
+    assert_array_equal(time_obtained, time_expected)
+
 
 if __name__ == "__main__":
     import nose
