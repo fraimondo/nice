@@ -50,7 +50,6 @@ class Features(OrderedDict):
     def reduce_to_topo(self, measure_params):
         logger.info('Reducing to topographies')
         self._check_measure_params_keys(measure_params)
-        ch_picks = self._check_measure_params_picks(measure_params)
         ch_picks = mne.pick_types(self.ch_info_, eeg=True, meg=True)
         if ch_picks is not None:  # XXX think if info is needed down-stream
             info = mne.io.pick.pick_info(self.ch_info_, ch_picks, copy=True)
@@ -123,28 +122,6 @@ class Features(OrderedDict):
                                  'the elements in this feature collection: '
                                  '{} is not a valid feature or class'
                                  .format(key))
-
-    def _check_measure_params_picks(self, measure_params):
-        # Check that if we pick channels, we do it the same way on every
-        # measure
-        all_picks = []
-        for key, params in measure_params.items():
-            if 'picks' in params:
-                picks = params['picks']
-                if 'channels' in picks:
-                    all_picks.append(np.sort(picks['channels']))
-
-        first = None
-        if len(all_picks) > 0:
-            first = all_picks[0]
-        equal = True
-        for this_picks in all_picks[1:]:
-            equal = np.all(this_picks == first)
-            if not equal:
-                raise ValueError('Your picks are inconsistent among each other '
-                                 'element in this feature collection. Channels '
-                                 'picks should be the same')
-        return first
 
 
 # def _reduce_to(inst, target, params):
