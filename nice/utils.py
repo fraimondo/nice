@@ -28,7 +28,7 @@ def create_mock_data_egi(n_channels, n_samples, stim=True):
     """
     mat_contents = loadmat(
         op.join(op.realpath(op.dirname(__file__)),
-                'io', 'tests', 'data', 'test-eeg.mat'))
+                'tests', 'data', 'test-eeg.mat'))
 
     data = mat_contents['data'][:n_channels, :n_samples] * 1e-7
     sfreq = 250.

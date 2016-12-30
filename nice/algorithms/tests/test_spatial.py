@@ -38,7 +38,7 @@ picks = mne.pick_types(epochs.info, meg=False, eeg=True, eog=False,
 
 csd_data = sio.loadmat(
     op.join(op.realpath(op.dirname(__file__)),
-            '..', '..', 'io', 'tests', 'data', 'test-eeg-csd.mat'))
+            '..', '..', 'tests', 'data', 'test-eeg-csd.mat'))
 
 
 def test_csd_core():

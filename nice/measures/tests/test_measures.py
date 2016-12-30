@@ -29,13 +29,13 @@ from nice.measures import TimeLockedContrast, read_erc
 from nice.measures import WindowDecoding, read_wd
 from nice.measures import TimeDecoding, read_td
 from nice.measures import GeneralizationDecoding, read_gd
-from nice.measures import PowerSpectralDensityEstimator, read_psd_estimator
+from nice.measures import PowerSpectralDensityEstimator
 
 matplotlib.use('Agg')  # for testing don't use X server
 
 warnings.simplefilter('always')  # enable b/c these tests throw warnings
 
-base_dir = op.join(op.dirname(__file__), '..', '..', 'io', 'tests', 'data')
+base_dir = op.join(op.dirname(__file__), '..', '..', 'tests', 'data')
 raw_fname = op.join(base_dir, 'test_raw.fif')
 event_name = op.join(base_dir, 'test-eve.fif')
 evoked_nf_name = op.join(base_dir, 'test-nf-ave.fif')

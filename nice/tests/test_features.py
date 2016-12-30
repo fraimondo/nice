@@ -29,7 +29,7 @@ matplotlib.use('Agg')  # for testing don't use X server
 
 warnings.simplefilter('always')  # enable b/c these tests throw warnings
 
-base_dir = op.join(op.dirname(__file__), '..', 'io', 'tests', 'data')
+base_dir = op.join(op.dirname(__file__), '..', 'tests', 'data')
 raw_fname = op.join(base_dir, 'test_raw.fif')
 event_name = op.join(base_dir, 'test-eve.fif')
 evoked_nf_name = op.join(base_dir, 'test-nf-ave.fif')
