@@ -17,12 +17,18 @@ from .. features import Features, read_features
 class Summary(object):
 
     def __init__(self):
-        self._scalar_names = None
         self._scalars = None
 
         self._topo_names = None
         self._topos = None
         self._topo_subjects = None
+
+    @property
+    def _scalar_names(self):
+        names = None
+        if self._scalars is not None:
+            names = [x for x in self._scalars.columns if x.startswith('nice')]
+        return names
 
     def add_topo(self, names, values, reduction_name):
         if self._topo_names is None:
@@ -34,9 +40,7 @@ class Summary(object):
         self._topos[reduction_name] = values[..., None]
 
     def add_scalar(self, names, values, reduction_name):
-        if self._scalar_names is None:
-            self._scalar_names = names
-        elif sorted(names) != sorted(self._scalar_names):
+        if sorted(names) != sorted(self._scalar_names):
             raise ValueError('Summary scalar names do not match')
         data = dict(zip(names, values))
         data['Reduction'] = reduction_name
@@ -86,7 +90,6 @@ class Summary(object):
     def copy(self):
         out = Summary()
         if self._scalars is not None:
-            out._scalar_names = list(self._scalar_names)
             out._scalars = self._scalars.copy(deep=True)
 
         if self._topos is not None:
@@ -96,13 +99,75 @@ class Summary(object):
             out._topo_subjects = list(self._topo_subjects)
         return out
 
-    def filter(self, reductions):
+    def filter(self, reductions=None, subjects=None, measures=None):
+        """ Filter a summary
+
+        Parameters
+        ----------
+        reductions : list of str
+            reductions to keep, if None (default), will keep all
+        subjects : list of str
+            subjects to keep, if None (default), will keep all
+        measures : list of str
+            measures to keep, if None (default), will keep all
+
+        Returns
+        -------
+        out : instance of summary
+
+        """
         out = self.copy()
-        out._scalars = out._scalars[out._scalars['Reduction'].isin(reductions)]
-        for k in list(out._topos.keys()):
-            if k not in reductions:
-                del out._topos[k]
+        if reductions is None and subjects is None and measures is None:
+            logger.warning('Nothing to filter here, returning a copy')
+        if reductions is not None:
+            n_orig_s = len(np.unique(out._scalars['Reduction'].values))
+            n_orig_t = len(out._topos.keys())
+            out._scalars = out._scalars[
+                out._scalars['Reduction'].isin(reductions)]
+            for k in list(out._topos.keys()):
+                if k not in reductions:
+                    del out._topos[k]
+            n_new_s = len(np.unique(out._scalars['Reduction'].values))
+            n_new_t = len(out._topos.keys())
+            logger.info('Filtering reductions: {} out of {} scalars and '
+                        '{} out of {} topos'.format(
+                            n_new_s, n_orig_s, n_new_t, n_orig_t))
+        if subjects is not None:
+            # Here we guess we have a subject to filter
+            out._scalars = out._scalars[out._scalars['Subject'].isin(subjects)]
+            idx, names = zip(*[(i, v) for i, v in
+                               enumerate(out._topo_subjects) if v in subjects])
+            idx = np.array(idx)
+            for k in out._topos.keys():
+                out._topos[k] = out._topos[..., idx]
+            n_orig = len(out._topo_subjects)
+            out._topo_subjects = names
+            n_new = len(names)
+            logger.info(
+                'Filtering subjects: {} out of {}'.format(n_new, n_orig))
+        if measures is not None:
+            cols = out._scalars.columns
+            n_orig_s = len([x for x in cols if x.startswith('nice')])
+            n_orig_t = len(out._topo_names)
+            cols = [x for x in cols if not (x.startswith('nice') and
+                                            x not in measures)]
+            out._scalars = out._scalars[cols]
+            idx, names = zip(*[(i, v) for i, v in
+                               enumerate(out._topo_names) if v in measures])
+            idx = np.array(idx)
+            for k in out._topos.keys():
+                out._topos[k] = out._topos[idx, ...]
+            out._topo_names = names
+            n_new_s = len([x for x in cols if x.startswith('nice')])
+            n_new_t = len(out._topo_names)
+            logger.info('Filtering measures: {} out of {} scalars and '
+                        ' {} out of {} topos'.format(
+                            n_new_s, n_orig_s, n_new_t, n_orig_t))
         return out
+
+    def append_info(self, subject_info):
+        self._scalars = pd.merge(
+            self._scalars, subject_info, how='inner', on='Subject')
 
     def _check_integrity(self):
         # Check data:
@@ -152,6 +217,7 @@ def _concatenate_summaries(summaries, names):
         The input summaries.
     names : list of str
         list of subjects names
+
     Returns
     -------
     out : instance of summary
@@ -163,7 +229,6 @@ def _concatenate_summaries(summaries, names):
         t_df['Subject'] = t_n
         if results._scalars is None:
             results._scalars = t_df
-            results._scalar_names = list(t_s._scalar_names)
             scalar_reductions = np.unique(t_s._scalars['Reduction'].values)
         else:
             if (t_s._scalar_names is None or sorted(results._scalar_names) !=
@@ -196,7 +261,6 @@ def read_summary(prefix):
     mc = sio.loadmat('{}_topos.mat'.format(prefix))
     suma = Summary()
     suma._scalars = df
-    suma._scalar_names = [x for x in df.columns if x.startswith('nice')]
     topo_names = [x.strip() for x in mc['names']]
     topo_subjects = None
     if 'subjects' in mc:
@@ -379,6 +443,8 @@ def summarize_run(in_path, reductions, subject_extra_info=None, out_path=None,
     global_summary = None
     if len(subjects_done) > 0:
         global_summary = _concatenate_summaries(summaries, subjects_done)
+        if subject_extra_info is not None:
+            global_summary.append_info(subject_extra_info)
         if out_path is not None:
             global_summary.save(op.join(out_path, 'all'))
     return global_summary
