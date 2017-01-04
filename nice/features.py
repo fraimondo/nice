@@ -47,6 +47,9 @@ class Features(OrderedDict):
             'channels' in meas._axis_map]
         return measure_names
 
+    def scalar_names(self):
+        return list(self.keys())
+
     def reduce_to_topo(self, measure_params):
         logger.info('Reducing to topographies')
         self._check_measure_params_keys(measure_params)
@@ -89,6 +92,10 @@ class Features(OrderedDict):
                 meas.compress(reduction_func)
 
     def save(self, fname, overwrite=False):
+        if not fname.endswith('_features.hdf5'):
+            logger.warning('Feature collections file name should end '
+                           'with "_features.hdf5". Some NICE feateures '
+                           'might not work.')
         write_hdf5(fname, list(self.keys()), title='nice/features/order',
                    overwrite=overwrite)
         for meas in self.values():

@@ -1,6 +1,6 @@
 import mne
 
-from ..modules import _get_module_func
+from .modules import _get_module_func
 
 
 def create_report(instance, title='default', config='default', report=None,
