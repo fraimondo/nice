@@ -30,6 +30,10 @@ class Summary(object):
             names = [x for x in self._scalars.columns if x.startswith('nice')]
         return names
 
+    @property
+    def subjects(self):
+        return self._topo_names
+
     def add_topo(self, names, values, reduction_name):
         if self._topo_names is None:
             self._topo_names = names
@@ -40,7 +44,8 @@ class Summary(object):
         self._topos[reduction_name] = values[..., None]
 
     def add_scalar(self, names, values, reduction_name):
-        if sorted(names) != sorted(self._scalar_names):
+        if (self._scalar_names is not None and
+                sorted(names) != sorted(self._scalar_names)):
             raise ValueError('Summary scalar names do not match')
         data = dict(zip(names, values))
         data['Reduction'] = reduction_name
@@ -49,6 +54,9 @@ class Summary(object):
         else:
             ts = pd.DataFrame(data, index=[len(self._scalars)])
             self._scalars = pd.concat([self._scalars, ts])
+
+    def scalar_names(self):
+        return self._scalar_names
 
     def scalars(self):
         return self._scalars
@@ -378,7 +386,7 @@ def summarize_subject(features, reductions, out_path=None, recompute=False):
     for reduction in reductions_to_do:
         logger.info('\t{}'.format(reduction))
     for i_red, reduction_name in enumerate(reductions_to_do):
-        logger.info('Applying {}'.format(reduction))
+        logger.info('Applying {}'.format(reduction_name))
         reduction = get_reductions(reduction_name)
         scalars = fc.reduce_to_scalar(reduction)
         topos = fc.reduce_to_topo(reduction)
@@ -418,6 +426,9 @@ def summarize_run(in_path, reductions, subject_extra_info=None, out_path=None,
     recompute : bool
         If true, try to use previously saved results. If false,
         recompute and overwrite. Results will be read from out_path
+
+    NOTE:
+         All subject results will be stored next to the subjects result file
     Returns
     -------
     out : instance of summary
@@ -434,7 +445,7 @@ def summarize_run(in_path, reductions, subject_extra_info=None, out_path=None,
     for subject in subjects:
         sin_path = op.join(in_path, subject)
         summary = summarize_subject(sin_path, reductions,
-                                    out_path=out_path, recompute=recompute)
+                                    out_path=sin_path, recompute=recompute)
         if summary is not None and summary is not False:
             summaries.append(summary)
             subjects_done.append(subject)
