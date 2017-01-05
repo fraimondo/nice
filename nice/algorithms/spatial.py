@@ -3,7 +3,7 @@ from numpy.polynomial.legendre import legval
 from scipy.linalg import inv
 
 from mne import pick_types, pick_info
-from mne.epochs import _BaseEpochs
+from mne.epochs import BaseEpochs
 from mne.evoked import Evoked
 from mne.parallel import parallel_func
 from mne.channels import read_montage
@@ -163,7 +163,7 @@ def epochs_compute_csd(inst, picks=None, g_matrix=None, h_matrix=None,
     G = _calc_g(np.dot(pos, pos.T)) if g_matrix is None else g_matrix
     H = _calc_h(np.dot(pos, pos.T)) if h_matrix is None else h_matrix
     G_precomputed = _prepare_G(G, lambda2)
-    if isinstance(out, _BaseEpochs):
+    if isinstance(out, BaseEpochs):
         parallel, my_csd, _ = parallel_func(_compute_csd, n_jobs)
         data = np.asarray(parallel(my_csd(e[picks],
                                    G_precomputed=G_precomputed,

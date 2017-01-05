@@ -24,7 +24,7 @@ event_id = {
 }
 epochs = mne.epochs.Epochs(raw, events, event_id, tmin=-.2, tmax=1.34,
                            preload=True, reject=None, picks=None,
-                           add_eeg_ref=False, baseline=(None, 0),
+                           baseline=(None, 0),
                            verbose=False)
 epochs.drop_channels(['STI 014'])
 picks = mne.pick_types(epochs.info, meg=False, eeg=True, eog=False,

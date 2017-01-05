@@ -31,7 +31,7 @@ event_id = {
     # 'LDGD': 50,  # yes XXX for now correct
 }
 epochs = mne.Epochs(raw, events, event_id, tmin=-.2, tmax=1.34,
-                    preload=True, reject=None, picks=None, add_eeg_ref=False,
+                    preload=True, reject=None, picks=None,
                     baseline=(None, 0), verbose=False)
 epochs.drop_channels(['STI 014'])
 

@@ -40,7 +40,7 @@ preload = True
 
 
 def _get_data():
-    raw = mne.io.Raw(raw_fname, add_eeg_ref=False, proj=False)
+    raw = mne.io.Raw(raw_fname)
     raw.info['lowpass'] = 70.  # To avoid warning
     events = mne.read_events(event_name)
     picks = mne.pick_types(raw.info, meg=True, eeg=True, stim=True,
@@ -48,7 +48,7 @@ def _get_data():
                            exclude='bads')[::15]
 
     epochs = mne.Epochs(raw, events, event_id, tmin, tmax, picks=picks,
-                        preload=preload, decim=3, add_eeg_ref=False)
+                        preload=preload, decim=3)
     return epochs
 
 
