@@ -15,9 +15,7 @@ from mne.utils import _TempDir
 # our imports
 from nice.measures import PowerSpectralDensity
 from nice.measures import ContingentNegativeVariation
-from nice.measures import KolmogorovComplexity
 from nice.measures import PermutationEntropy
-from nice.measures import SymbolicMutualInformation
 from nice.measures import TimeLockedTopography
 from nice.measures import TimeLockedContrast
 from nice.measures import PowerSpectralDensityEstimator

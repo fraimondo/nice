@@ -2,7 +2,6 @@ import numpy as np
 
 from numpy.testing import (assert_array_equal, assert_almost_equal,
                            assert_array_almost_equal)
-from nose.tools import assert_raises
 
 import mne
 
@@ -12,8 +11,8 @@ from nice.algorithms.connectivity import (epochs_compute_wsmi, _wsmi_python,
 from nice.algorithms.optimizations.jivaro import wsmi as jwsmi
 
 n_epochs = 3
-raw = utils.create_mock_data_egi(6, n_epochs*386, stim=True)
-triggers = np.arange(50, n_epochs*386, 386)
+raw = utils.create_mock_data_egi(6, n_epochs * 386, stim=True)
+triggers = np.arange(50, n_epochs * 386, 386)
 
 raw._data[-1].fill(0.0)
 raw._data[-1, triggers] = [10] * n_epochs
@@ -84,7 +83,7 @@ test_data_symb_2 = np.reshape(np.array([
     [1, 2],
 ]), [n_channels, 2, 1])
 
-p = 1.0/2
+p = 1.0 / 2
 
 test_data_count_2 = np.reshape(np.array([
     [p, p, 0, 0, 0, 0],
@@ -118,7 +117,6 @@ test_wsmi_2_result = np.reshape(np.array([
     [0, 0, 0, 0, 0, w],
     [0, 0, 0, 0, 0, 0],
 ]), [6, 6, 1])
-
 
 
 def test_wsmi():

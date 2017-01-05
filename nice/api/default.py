@@ -1,5 +1,6 @@
-from mne.epochs import BaseEpochs
-from .modules import register_module
+from mne.epochs import BaseEpochs, read_epochs
+from mne.utils import logger
+from . modules import register_module
 
 
 def register():

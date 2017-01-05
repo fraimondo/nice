@@ -7,7 +7,6 @@ from numpy.testing import assert_array_equal
 import mne
 
 from nice import utils
-from nice.algorithms.information_theory import epochs_compute_komplexity
 from nice.algorithms.information_theory.komplexity import (_komplexity_python,
                                                            _symb_python)
 from nice.algorithms.optimizations import ompk

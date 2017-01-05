@@ -1,7 +1,6 @@
 import numpy as np
 
-from numpy.testing import (assert_array_equal, assert_almost_equal,
-                           assert_array_almost_equal)
+from numpy.testing import (assert_array_equal, assert_almost_equal)
 from nose.tools import assert_raises
 
 import mne
@@ -12,8 +11,8 @@ from nice.algorithms.information_theory.permutation_entropy import _symb_python
 from nice.algorithms.optimizations.jivaro import pe as jpe
 
 n_epochs = 3
-raw = utils.create_mock_data_egi(6, n_epochs*386, stim=True)
-triggers = np.arange(50, n_epochs*386, 386)
+raw = utils.create_mock_data_egi(6, n_epochs * 386, stim=True)
+triggers = np.arange(50, n_epochs * 386, 386)
 
 raw._data[-1].fill(0.0)
 raw._data[-1, triggers] = [10] * n_epochs

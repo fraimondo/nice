@@ -1,10 +1,4 @@
-import os.path as op
-
 import numpy as np
-from scipy import io as sio
-
-from numpy.testing import assert_almost_equal
-from nose.tools import assert_equal
 
 from nice.utils import create_mock_data_egi
 from nice.algorithms.decoding import decode_window
@@ -12,9 +6,9 @@ from nice.algorithms.decoding import decode_window
 import mne
 
 n_epochs = 30
-raw = create_mock_data_egi(6, n_epochs*386, stim=True)
+raw = create_mock_data_egi(6, n_epochs * 386, stim=True)
 
-triggers = np.arange(50, n_epochs*386, 386)
+triggers = np.arange(50, n_epochs * 386, 386)
 
 raw._data[-1].fill(0.0)
 raw._data[-1, triggers] = [10] * int(n_epochs / 2) + [20] * int(n_epochs / 2)

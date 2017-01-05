@@ -141,7 +141,8 @@ def test_spectral():
     )
     psd = PowerSpectralDensity(estimator, fmin=1., fmax=4.)
     _base_io_test(psd, epochs,
-        functools.partial(read_psd, estimators={'default': estimator}))
+                  functools.partial(read_psd,
+                                    estimators={'default': estimator}))
     # TODO: Fix this test
     # _base_reduction_test(psd, epochs)
     # _base_compression_test(psd, epochs)
