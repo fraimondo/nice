@@ -17,7 +17,7 @@ Install nice
 ^^^^^^^^^^^^^^^^^^
 
 As any Python packages, to install NICE, go in the nice source
-code directory and do:
+code directory and do::
 
     python setup.py install
 
@@ -26,7 +26,7 @@ when install) use::
 
     python setup.py install --user
 
-You can also install the latest latest development version with pip:
+You can also install the latest latest development version with pip::
 
     pip install -e git+https://github.com/nice-tools/nice#egg=nice-dev --user
 
@@ -50,7 +50,7 @@ Optimizations
 ^^^^^^^^^^^^^
 
 Aditionally, we ship optimized versions of some algorithms. To build, just
-go to the nice soure code directory and do:
+go to the nice soure code directory and do::
 
     make
 
