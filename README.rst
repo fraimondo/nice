@@ -1,60 +1,23 @@
 .. -*- mode: rst -*-
 
-
-|Travis|_ |Appveyor|_ |Coveralls|_ |Zenodo|_
-
-.. |Travis| image:: https://api.travis-ci.org/mne-tools/mne-python.png?branch=master
-.. _Travis: https://travis-ci.org/mne-tools/mne-python
-
-.. |Appveyor| image:: https://ci.appveyor.com/api/projects/status/reccwk3filrasumg/branch/master?svg=true
-.. _Appveyor: https://ci.appveyor.com/project/Eric89GXL/mne-python/branch/master
-
-.. |Coveralls| image:: https://coveralls.io/repos/mne-tools/mne-python/badge.png?branch=master
-.. _Coveralls: https://coveralls.io/r/mne-tools/mne-python?branch=master
-
-.. |Zenodo| image:: https://zenodo.org/badge/5822/mne-tools/mne-python.svg
-.. _Zenodo: http://dx.doi.org/10.5281/zenodo.17856
-
-`mne-python <http://martinos.org/mne/mne-python.html>`_
+`NICE Tools`
 =======================================================
-
-This package is designed for sensor- and source-space analysis of M-EEG
-data, including frequency-domain and time-frequency analyses and
-non-parametric statistics. This package is presently evolving quickly and
-thanks to the adopted open development environment user contributions can
-be easily incorporated.
-
-Get more information
-^^^^^^^^^^^^^^^^^^^^
-
-This page only contains bare-bones instructions for installing mne-python.
-
-If you're familiar with MNE and you're looking for information on using
-mne-python specifically, jump right to the `mne-python homepage
-<http://martinos.org/mne/mne-python.html>`_. This website includes a
-`tutorial <http://martinos.org/mne/python_tutorial.html>`_,
-helpful `examples <http://martinos.org/mne/auto_examples/index.html>`_, and
-a handy `function reference <http://martinos.org/mne/python_reference.html>`_,
-among other things.
-
-If you're unfamiliar with MNE, you can visit the
-`MNE homepage <http://martinos.org/mne>`_ for full user documentation.
 
 Get the latest code
 ^^^^^^^^^^^^^^^^^^^
 
 To get the latest code using git, simply type::
 
-    git clone git://github.com/mne-tools/mne-python.git
+    git clone git://github.com/nice-tools/nice.git
 
 If you don't have git installed, you can download a zip or tarball
-of the latest code: https://github.com/mne-tools/mne-python/archives/master
+of the latest code: https://github.com/nice-tools/nice/archives/master
 
-Install mne-python
+Install nice
 ^^^^^^^^^^^^^^^^^^
 
-As any Python packages, to install MNE-Python, go in the mne-python source
-code directory and do::
+As any Python packages, to install NICE, go in the nice source
+code directory and do:
 
     python setup.py install
 
@@ -63,48 +26,34 @@ when install) use::
 
     python setup.py install --user
 
-You can also install the latest release version with easy_install::
+You can also install the latest latest development version with pip:
 
-    easy_install -U mne
-
-or with pip::
-
-    pip install mne --upgrade
-
-or for the latest development version (the most up to date)::
-
-    pip install -e git+https://github.com/mne-tools/mne-python#egg=mne-dev --user
+    pip install -e git+https://github.com/nice-tools/nice#egg=nice-dev --user
 
 Dependencies
 ^^^^^^^^^^^^
 
-The required dependencies to build the software are python >= 2.6,
-NumPy >= 1.6, SciPy >= 0.7.2 and matplotlib >= 0.98.4.
+The required dependencies to build the software are:
+    python >= 2.7 | python >= 3.4
+    scipy == 0.18.1
+    numpy==1.11.1
 
-Some isolated functions require pandas >= 0.7.3.
+And principally, mne-python >= 0.13:
+http://mne-tools.github.io/stable/index.html
+
+
+Some functions require pandas >= 0.7.3.
 
 To run the tests you will also need nose >= 0.10.
-and the MNE sample dataset (will be downloaded automatically
-when you run an example ... but be patient)
 
-To use NVIDIA CUDA for FFT FIR filtering, you will also need to install
-the NVIDIA CUDA SDK, pycuda, and scikits.cuda. The difficulty of this varies
-by platform; consider reading the following site for help getting pycuda
-to work (typically the most difficult to configure):
+Optimizations
+^^^^^^^^^^^^^
 
-http://wiki.tiker.net/PyCuda/Installation/
+Aditionally, we ship optimized versions of some algorithms. To build, just
+go to the nice soure code directory and do:
 
-Contribute to mne-python
-^^^^^^^^^^^^^^^^^^^^^^^^
+    make
 
-Please see the documentation on the mne-python homepage:
-
-http://martinos.org/mne/contributing.html
-
-Mailing list
-^^^^^^^^^^^^
-
-http://mail.nmr.mgh.harvard.edu/mailman/listinfo/mne_analysis
 
 Running the test suite
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -116,19 +65,10 @@ Run the test suite using::
 
 from the root of the project.
 
-Making a release and uploading it to PyPI
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-This command is only run by project manager, to make a release, and
-upload in to PyPI::
-
-    python setup.py sdist bdist_egg register upload
-
-
 Licensing
 ^^^^^^^^^
 
-MNE-Python is **BSD-licenced** (3 clause):
+NICE is **BSD-licenced** (3 clause):
 
     This software is OSI Certified Open Source Software.
     OSI Certified is a certification mark of the Open Source Initiative.
@@ -146,7 +86,7 @@ MNE-Python is **BSD-licenced** (3 clause):
       this list of conditions and the following disclaimer in the documentation
       and/or other materials provided with the distribution.
 
-    * Neither the names of MNE-Python authors nor the names of any
+    * Neither the names of NICE authors nor the names of any
       contributors may be used to endorse or promote products derived from
       this software without specific prior written permission.
 
