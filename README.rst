@@ -34,9 +34,9 @@ Dependencies
 ^^^^^^^^^^^^
 
 The required dependencies to build the software are:
-    python >= 2.7 | python >= 3.4
-    scipy == 0.18.1
-    numpy==1.11.1
+* python >= 2.7 | python >= 3.4
+* scipy == 0.18.1
+* numpy==1.11.1
 
 And principally, mne-python >= 0.13:
 http://mne-tools.github.io/stable/index.html
@@ -53,7 +53,6 @@ Aditionally, we ship optimized versions of some algorithms. To build, just
 go to the nice soure code directory and do:
 
     make
-
 
 Running the test suite
 ^^^^^^^^^^^^^^^^^^^^^^
