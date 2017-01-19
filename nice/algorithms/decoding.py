@@ -1,16 +1,12 @@
-from math import ceil
-import numbers
-import warnings
-
 import numpy as np
 
 from sklearn.svm import SVC
 from sklearn.preprocessing import StandardScaler
-from sklearn.cross_validation import StratifiedKFold, LabelKFold
+from sklearn.model_selection import StratifiedKFold, GroupKFold
 from sklearn.feature_selection import SelectPercentile, f_classif
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder
-from sklearn.metrics import roc_auc_score, roc_curve, auc
+from sklearn.metrics import roc_auc_score
 from sklearn.base import clone
 # from sklearn.utils import check_random_state
 
@@ -80,12 +76,13 @@ def decode_window(X, y, clf=None, cv=None, sample_weight='auto', n_jobs='auto',
         svc = SVC(C=1, kernel='linear', probability=True)
         transform = SelectPercentile(f_classif, 10)
         clf = Pipeline([('scaler', scaler), ('anova', transform), ('svc', svc)])
+
     if cv is None:
         if labels is None:
-            cv = StratifiedKFold(n_folds=int(min(10, len(y) / 2)), y=y,
+            cv = StratifiedKFold(n_splits=int(min(10, len(y) / 2)),
                                  shuffle=True, random_state=random_state)
         else:
-            cv = LabelKFold(labels, n_folds=10)
+            cv = GroupKFold(n_splits=10)
 
     if isinstance(sample_weight, str) and sample_weight == 'auto':
         sample_weight = np.zeros(len(y), dtype=float)
@@ -101,9 +98,10 @@ def decode_window(X, y, clf=None, cv=None, sample_weight='auto', n_jobs='auto',
     parallel, pfunc, _ = parallel_func(_decode_window_one_fold, n_jobs)
 
     out = parallel(pfunc(clone(clf), X, y, train, test, sample_weight)
-                   for train, test in cv)
+                   for train, test in cv.split(X, y, labels))
 
-    for (_, test), (probas_, predicts_, score_) in zip(cv, out):
+    for (_, test), (probas_, predicts_, score_) in zip(
+            cv.split(X, y, labels), out):
         probas[test] = probas_[:, 1]  # second column
         predictions[test] = predicts_
         scores.append(score_)

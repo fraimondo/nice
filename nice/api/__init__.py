@@ -7,6 +7,7 @@ from . summarize import summarize_subject
 from . predict import predict
 from . import modules
 from . default import register as _register_default
+from . import utils
 
 import pip
 _register_default()

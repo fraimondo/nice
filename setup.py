@@ -29,7 +29,7 @@ MAINTAINER = '@dengemann and @fraimondo'
 MAINTAINER_EMAIL = 'denis.engemann@gmail.com'
 URL = 'http://github.com/nice/nice'
 LICENSE = 'BSD (3-clause)'
-DOWNLOAD_URL = 'http://github.com/nice-meeg/nice'
+DOWNLOAD_URL = 'http://github.com/nice-tools/nice'
 VERSION = version
 
 
