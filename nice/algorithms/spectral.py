@@ -77,6 +77,7 @@ def _psd_welch(x, sfreq, fmin=0, fmax=np.inf, nperseg=256, n_fft=256,
                      for d in x_splits)
 
     # Combining/reshaping to original data shape
+    f_psd = [x for x in f_psd if len(x) != 0]
     psds = np.concatenate(f_psd, axis=0)
     psds = psds.reshape(np.hstack([dshape, -1]))
     return psds, freqs
