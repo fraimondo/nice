@@ -49,8 +49,10 @@ def epochs_compute_wsmi(epochs, kernel, tau, tmin=None, tmax=None,
             n_jobs = 1
 
     if 'bypass_csd' in method_params and method_params['bypass_csd'] is True:
+        logger.info('Bypassing CSD')
         csd_epochs = epochs
     else:
+        logger.info('Computing CSD')
         csd_epochs = epochs_compute_csd(epochs, n_jobs=n_jobs)
 
     freq = csd_epochs.info['sfreq']

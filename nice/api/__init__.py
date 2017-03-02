@@ -3,7 +3,7 @@ from . preprocessing import preprocess
 from . features import fit
 from . reductions import get_reductions
 from . report import create_report
-from . summarize import summarize_subject
+from . summarize import summarize_subject, summarize_run
 from . predict import predict
 from . import modules
 from . default import register as _register_default

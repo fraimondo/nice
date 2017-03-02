@@ -61,7 +61,7 @@ def _psd_welch(x, sfreq, fmin=0, fmax=np.inf, nperseg=256, n_fft=256,
 
     # Prep the PSD
     # XXX: Dont use _check_nfft with n_fft but nperseg
-    nperseg, n_overlap = _check_nfft(n_times, nperseg, n_overlap)
+    n_fft, nperseg, n_overlap = _check_nfft(n_times, n_fft, nperseg, n_overlap)
     win_size = n_fft / float(sfreq)
     logger.info("Effective window size : %0.3f (s)" % win_size)
     freqs = np.arange(n_fft // 2 + 1, dtype=float) * (sfreq / n_fft)

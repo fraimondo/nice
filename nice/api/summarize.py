@@ -436,6 +436,8 @@ def summarize_run(in_path, reductions, subject_extra_info=None, out_path=None,
     if subject_extra_info is not None:
         subjects = list(subject_extra_info['Subject'].values)
     else:
+        if in_path[-1] != '/':
+            in_path += '/'
         subjects = [x[0].split('/')[-1] for x in os.walk(in_path)]
         subjects = [x for x in subjects if len(x) > 0]
     logger.info('Summarizing {} subjects'.format(len(subjects)))
