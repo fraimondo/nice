@@ -1,4 +1,8 @@
 import numpy as np
+
+import os
+import os.path as op
+
 from numpy.polynomial.legendre import legval
 from scipy.linalg import inv
 
@@ -12,9 +16,21 @@ from mne.channels import read_montage
 def _extract_positions(inst, picks):
     """Aux function to get positions via Montage
     """
-    montage = read_montage('EGI_256')
-    # XXX: EXPERIMENTS -> CSD data shoudl be picked by name
-    return montage.pos[picks if picks is not None else Ellipsis]
+    # XXX: EXPERIMENTS -> CSD data should be picked by name
+    system, n_channels = inst.info['description'].split('/')
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    if inst.info['description'].split('/')[0] == 'egi':
+        if n_channels != 256:
+            raise ValueError('CSD for egi systems is only '
+                             'defined for 256 electrodes')
+        montage = read_montage(op.join(dir_path, 'templates/EGI_256.csd'))
+        pos = montage.pos
+    else:
+        montage = read_montage(op.join(dir_path, 'templates/standard_10-5.csd'))
+        names = [x.decode() for x in montage.ch_names]
+        pos_picks = [names.index(x) for x in inst.ch_names]
+        pos = montage.pos[pos_picks]
+    return pos[picks if picks is not None else Ellipsis]
 
 
 def _calc_g(cosang, stiffnes=4, num_lterms=50):
@@ -132,9 +148,6 @@ def epochs_compute_csd(inst, picks=None, g_matrix=None, h_matrix=None,
         Regularization parameter, produces smoothnes. Defaults to 1e-5.
     head : float
         The head radius (unit sphere). Defaults to 1.
-    lookup_table_fname : str | None
-        The name of the lookup table. Defaults to None. Note. If not None,
-        `g_matrix' and `h_matrix' will be ignored.
     n_jobs : int
         The number of processes to run in parallel. Note. Only used for
         Epochs input. Defaults to 1.
@@ -156,8 +169,7 @@ def epochs_compute_csd(inst, picks=None, g_matrix=None, h_matrix=None,
     if len(picks) == 0:
         raise ValueError('No EEG channels found.')
 
-    if ((g_matrix is None or h_matrix is None) or
-       (lookup_table_fname is not None)):
+    if ((g_matrix is None or h_matrix is None)):
         pos = _extract_positions(inst, picks=picks)
 
     G = _calc_g(np.dot(pos, pos.T)) if g_matrix is None else g_matrix
