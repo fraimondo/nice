@@ -7,6 +7,7 @@ from numpy.polynomial.legendre import legval
 from scipy.linalg import inv
 
 from mne import pick_types, pick_info
+from mne.utils import logger
 from mne.epochs import BaseEpochs
 from mne.evoked import Evoked
 from mne.parallel import parallel_func
@@ -16,16 +17,16 @@ from mne.channels import read_montage
 def _extract_positions(inst, picks):
     """Aux function to get positions via Montage
     """
-    # XXX: EXPERIMENTS -> CSD data should be picked by name
     system, n_channels = inst.info['description'].split('/')
     dir_path = os.path.dirname(os.path.realpath(__file__))
     if inst.info['description'].split('/')[0] == 'egi':
-        if n_channels != 256:
+        if int(n_channels) != 256:
             raise ValueError('CSD for egi systems is only '
                              'defined for 256 electrodes')
         montage = read_montage(op.join(dir_path, 'templates/EGI_256.csd'))
         pos = montage.pos
     else:
+        logger.info('Using 10-5 locations for CSD')
         montage = read_montage(op.join(dir_path, 'templates/standard_10-5.csd'))
         names = [x.decode() for x in montage.ch_names]
         pos_picks = [names.index(x) for x in inst.ch_names]

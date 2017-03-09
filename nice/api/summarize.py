@@ -310,7 +310,19 @@ def _try_read_summary(path):
     return summary
 
 
-def summarize_subject(features, reductions, out_path=None, recompute=False):
+def _try_get_features(features):
+    fc_files = sorted(glob(op.join(features, '*.hdf5')))
+    if len(fc_files) > 1:
+        logger.warning('More than one HDF5 file for {}.'
+                       ' Using last one'.format(features))
+    elif len(fc_files) == 0:
+        logger.warning('No HDF5 file for in {}.'.format(features))
+        return None
+    return fc_files[-1]
+
+
+def summarize_subject(features, reductions, reduction_params=None,
+                      out_path=None, recompute=False):
     """Summarizes one subject
 
     Parameters
@@ -319,6 +331,8 @@ def summarize_subject(features, reductions, out_path=None, recompute=False):
         The input data. If string, look for and HDF5 feature collection.
     reductions : list of str
         list of reductions to use
+    reductions : dict
+        Parameters to pass to the reductions
     out_path : str
         path to store the summary object. If None (default),
         results will not be saved.
@@ -364,19 +378,13 @@ def summarize_subject(features, reductions, out_path=None, recompute=False):
 
     out_prefix = 'default'
     if isinstance(features, str):
-        fc_files = sorted(glob(op.join(features, '*.hdf5')))
-        if len(fc_files) > 1:
-            logger.warning('More than one HDF5 file for {}.'
-                           ' Using last one'.format(features))
-        elif len(fc_files) == 0:
-            logger.warning('No HDF5 file for in {}.'.format(features))
-            return None
-        logger.info('Reading features from {}'.format(fc_files[-1]))
-        fc = read_features(fc_files[-1])
-        if fc_files[-1].endswith('_features.hdf5'):
-            out_prefix = fc_files[-1][:-14]
+        fc_name = _try_get_features(features)
+        logger.info('Reading features from {}'.format(fc_name))
+        fc = read_features(fc_name)
+        if fc_name.endswith('_features.hdf5'):
+            out_prefix = fc_name[:-14]
         else:
-            out_prefix = fc_files[-1][:-5]
+            out_prefix = fc_name[:-5]
     elif isinstance(features, Features):
         fc = features
     else:
@@ -387,7 +395,8 @@ def summarize_subject(features, reductions, out_path=None, recompute=False):
         logger.info('\t{}'.format(reduction))
     for i_red, reduction_name in enumerate(reductions_to_do):
         logger.info('Applying {}'.format(reduction_name))
-        reduction = get_reductions(reduction_name)
+        reduction = get_reductions(reduction_name,
+                                   config_params=reduction_params)
         scalars = fc.reduce_to_scalar(reduction)
         topos = fc.reduce_to_topo(reduction)
 
