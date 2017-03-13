@@ -174,6 +174,9 @@ def read_features(fname):
 
     if any('nice/data/epochs' in k for k in contents):
         epochs = read_hdf5(fname, title='nice/data/epochs')
+        # MNE fix
+        if 'filename' in epochs['info']:
+            del(epochs['info']['filename'])
         epochs = mne.EpochsArray(
             data=epochs.pop('_data'), info=Info(epochs.pop('info')),
             tmin=epochs.pop('tmin'), event_id=epochs.pop('event_id'),

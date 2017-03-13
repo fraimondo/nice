@@ -234,7 +234,10 @@ def _read_container(klass, fname, comment='default'):
     data = read_hdf5(fname,  _get_title(klass, comment))
     init_params = {k: v for k, v in data.items() if not k.endswith('_')}
     attrs = {k: v for k, v in data.items() if k.endswith('_')}
-    attrs['ch_info_'] = Info(read_hdf5(fname, title='nice/data/ch_info'))
+    file_info = read_hdf5(fname, title='nice/data/ch_info')
+    if 'filename' in file_info:
+        del(file_info['filename'])
+    attrs['ch_info_'] = Info(file_info)
     out = klass(**init_params)
     for k, v in attrs.items():
         if k.endswith('_'):
