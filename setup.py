@@ -26,7 +26,7 @@ descr = """NICE python project for MEG and EEG data analysis."""
 DISTNAME = 'nice'
 DESCRIPTION = descr
 MAINTAINER = '@dengemann and @fraimondo'
-MAINTAINER_EMAIL = 'denis.engemann@gmail.com'
+MAINTAINER_EMAIL = 'federaimondo@gmail.com;denis.engemann@gmail.com'
 URL = 'http://github.com/nice/nice'
 LICENSE = 'BSD (3-clause)'
 DOWNLOAD_URL = 'http://github.com/nice-tools/nice'
@@ -62,6 +62,7 @@ if __name__ == "__main__":
           packages=[
               'nice',
               'nice/measures',
+              'nice/algorithms',
               'nice/api'
           ],
           # XXX put stuff here that's not gonna be shipped

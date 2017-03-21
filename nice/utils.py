@@ -47,7 +47,7 @@ def create_mock_data_egi(n_channels, n_samples, stim=True):
     raw = RawArray(data=data, info=info)
     montage = read_montage('GSN-HydroCel-257')
     raw.set_montage(montage)
-    info['description'] = 'geodesic256'
+    info['description'] = 'egi/256'
     return raw
 
 
