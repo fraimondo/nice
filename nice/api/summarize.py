@@ -379,12 +379,15 @@ def summarize_subject(features, reductions, reduction_params=None,
     out_prefix = 'default'
     if isinstance(features, str):
         fc_name = _try_get_features(features)
+        if fc_name is None:
+            return None
         logger.info('Reading features from {}'.format(fc_name))
         fc = read_features(fc_name)
         if fc_name.endswith('_features.hdf5'):
             out_prefix = fc_name[:-14]
         else:
             out_prefix = fc_name[:-5]
+        out_prefix = out_prefix.split('/')[-1]
     elif isinstance(features, Features):
         fc = features
     else:
@@ -393,6 +396,9 @@ def summarize_subject(features, reductions, reduction_params=None,
     logger.info('Proceding with following reductions:')
     for reduction in reductions_to_do:
         logger.info('\t{}'.format(reduction))
+    if out_path is not None:
+        where = op.join(out_path, out_prefix)
+        logger.info('Saving summary to {}'.format(where))
     for i_red, reduction_name in enumerate(reductions_to_do):
         logger.info('Applying {}'.format(reduction_name))
         reduction = get_reductions(reduction_name,
@@ -405,9 +411,9 @@ def summarize_subject(features, reductions, reduction_params=None,
         summary.add_scalar(scalar_names, scalars, reduction_name)
         summary.add_topo(topo_names, topos, reduction_name)
 
+        if out_path is not None:
+            summary.save(where)
     if out_path is not None:
-        where = op.join(out_path, out_prefix)
-        logger.info('Saving summary to {}'.format(where))
         summary.save(where)
 
     # Filter only reductions that we were actually asked
