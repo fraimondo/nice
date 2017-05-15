@@ -66,6 +66,7 @@ def h5_listdir(fname, max_depth=4):
 
     return datasets
 
+
 def info_to_dict(info):
     info_dict = {k: v for k, v in info.items()}
     info_dict['ch_names'] = list(info_dict['ch_names'])
@@ -79,7 +80,7 @@ def write_hdf5_mne_epochs(fname, epochs, overwrite=False):
     epochs_vars['tmax'] = epochs.tmax
     epochs_vars['info'] = info_to_dict(epochs_vars['info'])
     write_hdf5(fname, epochs_vars, overwrite=overwrite,
-               title='nice/data/epochs')
+               title='nice/data/epochs', slash='replace')
 
 
 def mne_epochs_key_to_index(epochs, key):

@@ -64,7 +64,7 @@ class BasePowerSpectralDensity(BaseMeasure):
             self.estimator.save(fname, overwrite=overwrite)
         write_hdf5(
             fname, save_vars, overwrite=overwrite,
-            title=_get_title(self.__class__, self.comment))
+            title=_get_title(self.__class__, self.comment), slash='replace')
 
     def _get_title(self):
         return _get_title(self.__class__, self.comment)
@@ -112,7 +112,7 @@ class PowerSpectralDensityEstimator(BaseContainer):
             fname,
             save_vars,
             title=_get_title(self.__class__, self.comment),
-            overwrite=overwrite)
+            overwrite=overwrite, slash='replace')
 
     @classmethod
     def _read(cls, fname, comment='default'):

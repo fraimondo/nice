@@ -97,7 +97,7 @@ class Features(OrderedDict):
                            'with "_features.hdf5". Some NICE feateures '
                            'might not work.')
         write_hdf5(fname, list(self.keys()), title='nice/features/order',
-                   overwrite=overwrite)
+                   overwrite=overwrite, slash='replace')
         for meas in self.values():
             meas.save(fname, overwrite='update')
 
@@ -168,13 +168,13 @@ def read_features(fname):
     measures = list()
     epochs = None
     if 'nice/features/order' in contents:
-        measure_order = read_hdf5(fname, title='nice/features/order')
+        measure_order = read_hdf5(fname, title='nice/features/order',
+                                  slash='replace')
     else:
         measure_order = [k for k in contents if 'nice/measure/' in k]
 
     if any('nice/data/epochs' in k for k in contents):
-        import pdb; pdb.set_trace()
-        epochs = read_hdf5(fname, title='nice/data/epochs')
+        epochs = read_hdf5(fname, title='nice/data/epochs', slash='replace')
         # MNE fix
         if 'filename' in epochs['info']:
             del(epochs['info']['filename'])

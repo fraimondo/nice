@@ -25,7 +25,7 @@ class BaseContainer(object):
             logger.info('Writing channel info to HDF5 file')
             write_hdf5(fname, info_to_dict(self.ch_info_),
                        title='nice/data/ch_info',
-                       overwrite=overwrite)
+                       overwrite=overwrite, slash='replace')
 
     def _get_save_vars(self, exclude):
         return {k: v for k, v in vars(self).items() if
@@ -38,7 +38,7 @@ class BaseContainer(object):
             fname,
             save_vars,
             title=_get_title(self.__class__, self.comment),
-            overwrite=overwrite)
+            overwrite=overwrite, slash='replace')
 
     def _get_title(self):
         return _get_title(self.__class__, self.comment)
@@ -196,7 +196,7 @@ class BaseTimeLocked(BaseMeasure):
             write_hdf5_mne_epochs(fname, epochs, overwrite=overwrite)
         write_hdf5(
             fname, save_vars, overwrite=overwrite,
-            title=_get_title(self.__class__, self.comment))
+            title=_get_title(self.__class__, self.comment), slash='replace')
 
     @classmethod
     def _read(cls, fname, epochs, comment='default'):
@@ -231,10 +231,10 @@ def _get_title(klass, comment):
 
 
 def _read_container(klass, fname, comment='default'):
-    data = read_hdf5(fname,  _get_title(klass, comment))
+    data = read_hdf5(fname,  _get_title(klass, comment), slash='replace')
     init_params = {k: v for k, v in data.items() if not k.endswith('_')}
     attrs = {k: v for k, v in data.items() if k.endswith('_')}
-    file_info = read_hdf5(fname, title='nice/data/ch_info')
+    file_info = read_hdf5(fname, title='nice/data/ch_info', slash='replace')
     if 'filename' in file_info:
         del(file_info['filename'])
     attrs['ch_info_'] = Info(file_info)
