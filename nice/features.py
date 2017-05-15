@@ -173,6 +173,7 @@ def read_features(fname):
         measure_order = [k for k in contents if 'nice/measure/' in k]
 
     if any('nice/data/epochs' in k for k in contents):
+        import pdb; pdb.set_trace()
         epochs = read_hdf5(fname, title='nice/data/epochs')
         # MNE fix
         if 'filename' in epochs['info']:

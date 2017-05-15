@@ -164,7 +164,7 @@ class Summary(object):
                                enumerate(out._topo_names) if v in measures])
             idx = np.array(idx)
             for k in out._topos.keys():
-                out._topos[k] = out._topos[idx, ...]
+                out._topos[k] = out._topos[k][idx, ...]
             out._topo_names = names
             n_new_s = len([x for x in cols if x.startswith('nice')])
             n_new_t = len(out._topo_names)
