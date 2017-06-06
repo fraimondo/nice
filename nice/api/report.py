@@ -8,6 +8,8 @@ def create_report(instance, title='default', config='default', report=None,
     out = None
     if report is None:
         report = mne.report.Report(title=title)
+    if config_params is None:
+        config_params = {}
     func = _get_module_func('report', config)
     out = func(instance, report=report, config_params=config_params)
     return out
