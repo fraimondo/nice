@@ -37,9 +37,11 @@ def read_cnv(fname, comment='default'):
 class TimeLockedTopography(BaseTimeLocked):
     """docstring for ERP"""
 
-    def __init__(self, tmin, tmax, subset=None, comment='default'):
+    def __init__(self, tmin, tmax, subset=None, missing_nan=False,
+                 comment='default'):
         BaseTimeLocked.__init__(self, tmin, tmax, comment)
         self.subset = subset
+        self.missing_nan = missing_nan
 
     @property
     def _axis_map(self):
@@ -76,15 +78,19 @@ class TimeLockedTopography(BaseTimeLocked):
         if epochs_picks is not None:
             this_epochs = this_epochs[epochs_picks]
 
-        if self.subset:
-            this_epochs = this_epochs[self.subset]
-
         # Pick channels based on original indices
         ch_picks = this_picks['channels']
         if ch_picks is None:
             ch_picks = pick_types(this_epochs.info, eeg=True, meg=True)
 
-        return this_epochs.get_data()[:, ch_picks][..., time_mask]
+        if self.subset and self.missing_nan and self.subset not in this_epochs:
+            data = np.array([[[np.nan]]])
+        else:
+            if self.subset:
+                this_epochs = this_epochs[self.subset]
+            data = this_epochs.get_data()[:, ch_picks][..., time_mask]
+
+        return data
 
 
 def read_ert(fname, epochs, comment='default'):
@@ -94,11 +100,12 @@ def read_ert(fname, epochs, comment='default'):
 class TimeLockedContrast(BaseTimeLocked):
     """docstring for ERP"""
 
-    def __init__(self, tmin, tmax, condition_a, condition_b,
+    def __init__(self, tmin, tmax, condition_a, condition_b, missing_nan=False,
                  comment='default'):
         BaseTimeLocked.__init__(self, tmin, tmax, comment)
         self.condition_a = condition_a
         self.condition_b = condition_b
+        self.missing_nan = missing_nan
 
     @property
     def _axis_map(self):
@@ -111,7 +118,8 @@ class TimeLockedContrast(BaseTimeLocked):
     def _reduce_to(self, reduction_func, target, picks):
         cont_list = list()
         for cond in [self.condition_a, self.condition_b]:
-            ert = TimeLockedTopography(self.tmin, self.tmax, subset=cond)
+            ert = TimeLockedTopography(self.tmin, self.tmax, subset=cond,
+                                       missing_nan=self.missing_nan)
             ert.fit(self.epochs_)
             cont_list.append(ert._reduce_to(reduction_func, target, picks))
         return cont_list[0] - cont_list[1]
