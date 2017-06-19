@@ -105,3 +105,13 @@ def mne_epochs_key_to_index(epochs, key):
         select = key if isinstance(key, slice) else np.atleast_1d(key)
 
     return select
+
+
+def epochs_has_event(epochs, keys):
+    event_id = epochs.event_id
+    keys = [keys] if not isinstance(keys, (list, tuple)) else keys
+    matches = []
+    for key in keys:
+        matches.extend(k for k in event_id.keys()
+                       if set(key.split('/')).issubset(k.split('/')))
+    return len(matches) > 0

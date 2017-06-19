@@ -5,7 +5,7 @@ import numpy as np
 from .base import (BaseMeasure, BaseTimeLocked, _read_container)
 
 from ..recipes.time_locked import epochs_compute_cnv
-from ..utils import mne_epochs_key_to_index
+from ..utils import mne_epochs_key_to_index, epochs_has_event
 from ..algorithms.decoding import decode_window
 from mne.utils import _time_mask
 from mne.io.pick import pick_types
@@ -83,7 +83,8 @@ class TimeLockedTopography(BaseTimeLocked):
         if ch_picks is None:
             ch_picks = pick_types(this_epochs.info, eeg=True, meg=True)
 
-        if self.subset and self.missing_nan and self.subset not in this_epochs:
+        if (self.subset and self.missing_nan and not
+                epochs_has_event(this_epochs, self.subset)):
             data = np.array([[[np.nan]]])
         else:
             if self.subset:
