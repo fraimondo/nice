@@ -63,7 +63,6 @@ if __name__ == "__main__":
               'nice',
               'nice/measures',
               'nice/algorithms',
-              'nice/api'
           ],
           # XXX put stuff here that's not gonna be shipped
           package_data={'nice': []},
