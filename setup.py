@@ -66,7 +66,7 @@ if __name__ == "__main__":
              'nice.algorithms': util.convert_path('nice/algorithms'),
              'nice.externals': util.convert_path('nice/externals'),
              'nice.recipes': util.convert_path('nice/recipes'),
-          }
+          },
           packages=[
               'nice',
               'nice.measures',
