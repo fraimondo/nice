@@ -4,4 +4,3 @@ from . import measures
 from . import externals
 from . features import Features
 from . features import read_features
-from . import tests
