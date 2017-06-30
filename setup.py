@@ -9,7 +9,7 @@ from os import path as op
 
 import setuptools  # noqa; we are using a setuptools namespace
 from numpy.distutils.core import setup
-from distutils import util
+from setuptools import find_packages
 
 # get the version (don't import mne here, so dependencies are not needed)
 version = None
@@ -60,20 +60,8 @@ if __name__ == "__main__":
                        'Operating System :: Unix',
                        'Operating System :: MacOS'],
           platforms='any',
-          package_dir={
-             'nice': 'nice',
-             'nice.measures': util.convert_path('nice/measures'),
-             'nice.algorithms': util.convert_path('nice/algorithms'),
-             'nice.externals': util.convert_path('nice/externals'),
-             'nice.recipes': util.convert_path('nice/recipes'),
-          },
-          packages=[
-              'nice',
-              'nice.measures',
-              'nice.algorithms',
-              'nice.externals',
-              'nice.recipes',
-          ],
+          packages=find_packages(
+              exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
           # XXX put stuff here that's not gonna be shipped
           package_data={'nice': []},
           scripts=[])
