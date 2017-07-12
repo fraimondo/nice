@@ -8,7 +8,7 @@ from mne.utils import logger, _time_mask
 
 
 def epochs_compute_pe(epochs, kernel, tau, tmin=None, tmax=None,
-                      backend='python'):
+                      backend='python', method_params=None):
     """Compute Permutation Entropy (PE)
 
     Parameters
@@ -22,6 +22,9 @@ def epochs_compute_pe(epochs, kernel, tau, tmin=None, tmax=None,
     backend : {'python', 'c'}
         The backend to be used. Defaults to 'python'.
     """
+    if method_params is None:
+        method_params = {}
+
     freq = epochs.info['sfreq']
 
     picks = mne.io.pick.pick_types(epochs.info, meg=True, eeg=True)
@@ -31,7 +34,10 @@ def epochs_compute_pe(epochs, kernel, tau, tmin=None, tmax=None,
 
     data = np.hstack(data)
 
-    filter_freq = np.double(freq) / kernel / tau
+    if 'filter_freq' in method_params:
+        filter_freq = method_params['filter_freq']
+    else:
+        filter_freq = np.double(freq) / kernel / tau
     logger.info('Filtering  at %.2f Hz' % filter_freq)
     b, a = butter(6, 2.0 * filter_freq / np.double(freq), 'lowpass')
 

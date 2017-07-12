@@ -62,7 +62,10 @@ def epochs_compute_wsmi(epochs, kernel, tau, tmin=None, tmax=None,
     data = csd_epochs.get_data()[:, picks, ...]
     n_epochs = len(data)
 
-    filter_freq = np.double(freq) / kernel / tau
+    if 'filter_freq' in method_params:
+        filter_freq = method_params['filter_freq']
+    else:
+        filter_freq = np.double(freq) / kernel / tau
     logger.info('Filtering  at %.2f Hz' % filter_freq)
     b, a = butter(6, 2.0 * filter_freq / np.double(freq), 'lowpass')
     data = np.hstack(data)

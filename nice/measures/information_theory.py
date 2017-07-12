@@ -40,16 +40,18 @@ class PermutationEntropy(BaseMeasure):
     """docstring for PermutationEntropy"""
 
     def __init__(self, tmin=None, tmax=None, kernel=3, tau=8, backend="python",
-                 comment='default'):
+                 comment='default', method_params=None):
         BaseMeasure.__init__(self, tmin, tmax, comment)
         self.kernel = kernel
         self.tau = tau
         self.backend = backend
+        self.method_params = method_params
 
     def _fit(self, epochs):
         pe, _ = epochs_compute_pe(
             epochs, tmin=self.tmin, tmax=self.tmax,
-            kernel=self.kernel, tau=self.tau, backend=self.backend)
+            kernel=self.kernel, tau=self.tau, backend=self.backend,
+            method_params=self.method_params)
         self.data_ = pe
 
     @property
