@@ -61,8 +61,9 @@ class TimeLockedTopography(BaseTimeLocked):
             picks = {}
         this_picks.update(picks)
         to_preserve = self._get_preserve_axis(target)
-        if to_preserve is not None:
-            this_picks[to_preserve] = None
+        if len(to_preserve) > 0:
+            for axis in to_preserve:
+                this_picks[axis] = None
 
         # Pick Times based on original times
         time_picks = this_picks['times']

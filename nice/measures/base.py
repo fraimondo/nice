@@ -72,17 +72,20 @@ class BaseMeasure(BaseContainer):
     def _get_title(self):
         return _get_title(self.__class__, self.comment)
 
-    def _get_preserve_axis(self, target):
-        to_preserve = None
-        if target == 'topography':
-            to_preserve = 'channels'
-        elif target == 'times':
-            to_preserve = 'times'
-        elif target == 'epochs':
-            to_preserve = 'epochs'
-        if to_preserve is not None and to_preserve not in self._axis_map.keys():
+    def _get_preserve_axis(self, targets):
+        to_preserve = []
+        if not isinstance(targets, list):
+            targets = [targets]
+        for elem in targets:
+            if 'topography' == elem :
+                to_preserve.append('channels')
+            elif 'times' == elem:
+                to_preserve.append('times')
+            elif 'epochs' == elem:
+                to_preserve.append('epochs')
+        if any(x not in self._axis_map.keys() for x in to_preserve):
             raise ValueError('Cannot reduce {} to {}'.format(
-                self._get_title(), target))
+                self._get_title(), targets))
         return to_preserve
 
     def _reduce_to(self, reduction_func, target, picks):
@@ -123,7 +126,7 @@ class BaseMeasure(BaseContainer):
                 raise ValueError('Picking is not compatible for {}'.format(
                     self._get_title()))
             for axis, ax_picks in picks.items():
-                if axis == to_preserve:
+                if axis in to_preserve:
                     continue
                 if ax_picks is not None:
                     this_axis = self._axis_map[axis]
@@ -136,12 +139,13 @@ class BaseMeasure(BaseContainer):
         _axis_map = self._axis_map
         funcs = list()
         axis_to_preserve = self._get_preserve_axis(target)
-        if axis_to_preserve is not None:
-            removed_axis = _axis_map.pop(axis_to_preserve)
+        if len(axis_to_preserve) > 0:
+            removed_axis = []
+            for this_axis_to_preserve in axis_to_preserve:
+                removed_axis.append(_axis_map.pop(this_axis_to_preserve))
             if reduction_func is not None:
                 reduction_func = [i for i in reduction_func
-                                  if i['axis'] != axis_to_preserve]
-
+                                  if i['axis'] not in axis_to_preserve]
         permutation_list = list()
         if reduction_func is None:
             for remaining_axis in _axis_map.values():
@@ -155,8 +159,9 @@ class BaseMeasure(BaseContainer):
         else:
             raise ValueError('Run `python -c "import this"` to see '
                              'why we will not tolerate these things')
-        if axis_to_preserve is not None:
-            permutation_list.append(removed_axis)
+        if len(axis_to_preserve) > 0:
+            permutation_list += removed_axis
+
         data = np.transpose(data, permutation_list)
         return data, funcs
 
