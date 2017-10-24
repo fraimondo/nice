@@ -99,8 +99,7 @@ def mne_epochs_key_to_index(epochs, key):
                     raise KeyError('Attempting selection of events via '
                                    'multiple/partial matching, but no '
                                    'event matches all criteria.')
-        select = np.any(np.atleast_2d([epochs._keys_to_idx(k)
-                                       for k in key]), axis=0)
+        select = epochs._keys_to_idx(key)
     else:
         select = key if isinstance(key, slice) else np.atleast_1d(key)
 

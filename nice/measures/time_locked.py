@@ -265,7 +265,7 @@ def _prepare_y(epochs, condition_a, condition_b):
     condition_a_mask = mne_epochs_key_to_index(epochs, condition_a)
     condition_b_mask = mne_epochs_key_to_index(epochs, condition_b)
 
-    y = np.r_[np.zeros(condition_b_mask.sum()),
-              np.ones(condition_a_mask.sum())]
+    y = np.r_[np.zeros(condition_b_mask.shape[0]),
+              np.ones(condition_a_mask.shape[0])]
 
     return y, condition_a_mask, condition_b_mask
