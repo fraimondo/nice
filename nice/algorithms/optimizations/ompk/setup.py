@@ -6,8 +6,8 @@ include = [get_include(), '.']
 
 module1 = Extension('ompk',
                     sources=['ompk.c', 'komplexity.c'],
-                    extra_compile_args=["-fopenmp", "-std=c99", "-O3"],
-                    extra_link_args=['-lz'],
+                    extra_compile_args=['-fopenmp', '-std=c99', '-O3'],
+                    extra_link_args=['-lz', '-fopenmp']],
                     include_dirs=include)
 
 setup(name='OmpkBindings',
