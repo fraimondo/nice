@@ -1,9 +1,29 @@
+# NICE
+# Copyright (C) 2017 - Authors of NICE
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# You can be released from the requirements of the license by purchasing a
+# commercial license. Buying such a license is mandatory as soon as you
+# develop commercial activities as mentioned in the GNU Affero General Public
+# License version 3 without disclosing the source code of your own applications.
+#
 import numpy as np
 
 import mne
 from mne.utils import logger, _time_mask
 from scipy.signal import butter, filtfilt
-from .spatial import epochs_compute_csd
 
 
 def _get_weights_matrix(nsym):
@@ -53,6 +73,11 @@ def epochs_compute_wsmi(epochs, kernel, tau, tmin=None, tmax=None,
         csd_epochs = epochs
     else:
         logger.info('Computing CSD')
+        try:
+            from pycsd import epochs_compute_csd
+        except:
+            raise ValueError('PyCSD not available. '
+                             'Please install this dependency.')
         csd_epochs = epochs_compute_csd(epochs, n_jobs=n_jobs)
 
     freq = csd_epochs.info['sfreq']

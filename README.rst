@@ -35,8 +35,9 @@ Dependencies
 
 The required dependencies to build the software are:
 * python >= 2.7 | python >= 3.4
-* scipy == 0.18.1
-* numpy==1.11.1
+* scipy >= 0.18.1
+* numpy >= 1.11.1
+* h5py >= 2.6.0
 
 And principally, mne-python >= 0.13:
 http://mne-tools.github.io/stable/index.html
@@ -45,6 +46,8 @@ http://mne-tools.github.io/stable/index.html
 Some functions require pandas >= 0.7.3.
 
 To run the tests you will also need nose >= 0.10.
+
+To use wSMI with CSD you need pycsd: https://github.com/nice-tools/pycsd/
 
 Optimizations
 ^^^^^^^^^^^^^
@@ -76,37 +79,28 @@ If you use this code in your project, please cite::
 Licensing
 ^^^^^^^^^
 
-NICE is **BSD-licenced** (3 clause):
+NICE is licensed under the GNU Affero General Public License version 3:
 
     This software is OSI Certified Open Source Software.
     OSI Certified is a certification mark of the Open Source Initiative.
 
-    Copyright (c) 2011, authors of MNE-Python
-    All rights reserved.
+    Copyright (c) 2017, authors of NICE - All rights reserved.
 
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions are met:
+    * This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-    * Redistributions of source code must retain the above copyright notice,
-      this list of conditions and the following disclaimer.
+    * This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
 
-    * Redistributions in binary form must reproduce the above copyright notice,
-      this list of conditions and the following disclaimer in the documentation
-      and/or other materials provided with the distribution.
+    * You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    * Neither the names of NICE authors nor the names of any
-      contributors may be used to endorse or promote products derived from
-      this software without specific prior written permission.
-
-    **This software is provided by the copyright holders and contributors
-    "as is" and any express or implied warranties, including, but not
-    limited to, the implied warranties of merchantability and fitness for
-    a particular purpose are disclaimed. In no event shall the copyright
-    owner or contributors be liable for any direct, indirect, incidental,
-    special, exemplary, or consequential damages (including, but not
-    limited to, procurement of substitute goods or services; loss of use,
-    data, or profits; or business interruption) however caused and on any
-    theory of liability, whether in contract, strict liability, or tort
-    (including negligence or otherwise) arising in any way out of the use
-    of this software, even if advised of the possibility of such
-    damage.**
+    * You can be released from the requirements of the license by purchasing a
+    commercial license. Buying such a license is mandatory as soon as you
+    develop commercial activities as mentioned in the GNU Affero General Public
+    License version 3 without disclosing the source code of your own
+    applications.
