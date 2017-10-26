@@ -42,3 +42,4 @@ doc/samples
 cover
 
 *.orig
+*.gch
