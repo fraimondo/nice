@@ -25,7 +25,6 @@ import numpy as np
 from mne.utils import logger
 from mne.epochs import _compare_epochs_infos
 from mne.io.meas_info import Info
-from mne.io.pick import pick_info, pick_types
 from mne.externals.h5io import write_hdf5, read_hdf5
 import h5py
 
@@ -98,7 +97,7 @@ class BaseMeasure(BaseContainer):
         if not isinstance(targets, list):
             targets = [targets]
         for elem in targets:
-            if 'topography' == elem :
+            if 'topography' == elem:
                 to_preserve.append('channels')
             elif 'times' == elem:
                 to_preserve.append('times')

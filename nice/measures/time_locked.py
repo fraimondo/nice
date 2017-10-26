@@ -23,7 +23,7 @@ from collections import Counter, OrderedDict
 
 import numpy as np
 
-from .base import (BaseMeasure, BaseTimeLocked, _read_container)
+from .base import BaseMeasure, BaseTimeLocked
 
 from ..recipes.time_locked import epochs_compute_cnv
 from ..utils import mne_epochs_key_to_index, epochs_has_event
