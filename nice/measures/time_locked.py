@@ -23,14 +23,16 @@ from collections import Counter, OrderedDict
 
 import numpy as np
 
-from .base import BaseMeasure, BaseTimeLocked
-
-from ..recipes.time_locked import epochs_compute_cnv
-from ..utils import mne_epochs_key_to_index, epochs_has_event
-from ..algorithms.decoding import decode_window
 from mne.utils import _time_mask
 from mne.io.pick import pick_types
-import mne.decoding as mne_decoding
+
+from .base import BaseMeasure, BaseTimeLocked
+
+from ..recipes.time_locked import (epochs_compute_cnv, cv_decode_sliding,
+                                   decode_sliding, cv_decode_generalization,
+                                   decode_generalization)
+from ..utils import mne_epochs_key_to_index, epochs_has_event
+from ..algorithms.decoding import decode_window
 
 
 class ContingentNegativeVariation(BaseMeasure):
@@ -172,7 +174,14 @@ class WindowDecoding(BaseMeasure):
     def _fit(self, epochs):
         dp = self.decoding_params
 
-        X, y, sample_weight = self._prepare_window_decoding(epochs)
+        if self.tmin is not None or self.tmax is not None:
+            epochs = epochs.copy().crop(self.tmin, self.tmax)
+
+        X, y, sample_weight = _prepare_decoding(
+            epochs, self.condition_a, self.condition_b)
+
+        X.reshape(len(y), -1)
+
         if dp['sample_weight'] not in ('auto', None):
             sample_weight = dp['sample_weight']
 
@@ -190,45 +199,52 @@ class WindowDecoding(BaseMeasure):
             ('folds', 0),
         ])
 
-    def _prepare_window_decoding(self, epochs):
-        y, condition_a_mask, condition_b_mask = _prepare_y(
-            epochs, self.condition_a, self.condition_b)
-        sample_weight = _prepare_sample_weights(
-            epochs, condition_a_mask, condition_b_mask)
-        X = np.concatenate([
-            epochs.get_data()[condition_b_mask],
-            epochs.get_data()[condition_a_mask]
-        ]).reshape(len(y), -1)
-
-        return X, y, sample_weight
-
 
 def read_wd(fname, comment='default'):
     return WindowDecoding._read(fname, comment=comment)
 
 
 class TimeDecoding(BaseMeasure):
-    def __init__(self, tmin, tmax, condition_a, condition_b, decoding_params,
-                 comment='default'):
+    def __init__(self, tmin, tmax, condition_a, condition_b,
+                 decoding_params=None, comment='default'):
         BaseMeasure.__init__(self, tmin, tmax, comment)
         self.condition_a = condition_a
         self.condition_b = condition_b
         self.decoding_params = decoding_params
 
     def _fit(self, epochs):
-        dp = {k: v for k, v in self.decoding_params.items()}
-        dp['times'] = dict(start=self.tmin, stop=self.tmax)
-        td = mne_decoding.TimeDecoding(**dp)
-        y, _, _ = _prepare_y(epochs, self.condition_a, self.condition_b)
-        td.fit(epochs, y=y)
-        td.score(epochs, y=y)
-        self.data_ = np.array(td.scores_)
+        dp = self.decoding_params
+        if dp is None:
+            dp = {}
+        if self.tmin is not None or self.tmax is not None:
+            epochs = epochs.copy().crop(self.tmin, self.tmax)
+
+        if 'train_condition' in dp:
+            train_cond = dp['train_condition']
+            test_cond = dp['test_condition']
+            X_train, y_train, _ = _prepare_decoding(
+                epochs[train_cond], self.condition_a, self.condition_b
+            )
+            X_test, y_test, _ = _prepare_decoding(
+                epochs[test_cond], self.condition_a, self.condition_b
+            )
+            scores = decode_sliding(X_train, y_train, X_test, y_test, **dp)
+        else:
+            # Normal CV decoding
+            X, y, sample_weight = _prepare_decoding(
+                epochs, self.condition_a, self.condition_b)
+
+            scores = cv_decode_sliding(X, y, **dp)
+
+        self.data_ = np.array(scores)
         self.shape_ = self.data_.shape
+        del epochs
 
     @property
     def _axis_map(self):
         return OrderedDict([
-            ('times', 0),
+            ('folds', 0)
+            ('times', 1),
         ])
 
 
@@ -237,29 +253,47 @@ def read_td(fname, comment='default'):
 
 
 class GeneralizationDecoding(BaseMeasure):
-    def __init__(self, tmin, tmax, condition_a, condition_b, decoding_params,
-                 comment='default'):
+    def __init__(self, tmin, tmax, condition_a, condition_b,
+                 decoding_params=None, comment='default'):
         BaseMeasure.__init__(self, tmin, tmax, comment)
         self.condition_a = condition_a
         self.condition_b = condition_b
         self.decoding_params = decoding_params
 
     def _fit(self, epochs):
-        dp = {k: v for k, v in self.decoding_params.items()}
-        dp['train_times'] = dict(start=self.tmin, stop=self.tmax)
-        dp['test_times'] = dict(start=self.tmin, stop=self.tmax)
-        td = mne_decoding.GeneralizationAcrossTime(**dp)
-        y, _, _ = _prepare_y(epochs, self.condition_a, self.condition_b)
-        td.fit(epochs, y=y)
-        td.score(epochs, y=y)
-        self.data_ = np.array(td.scores_)
+        dp = self.decoding_params
+        if dp is None:
+            dp = {}
+        if self.tmin is not None or self.tmax is not None:
+            epochs = epochs.copy().crop(self.tmin, self.tmax)
+
+        if 'train_condition' in dp:
+            train_cond = dp['train_condition']
+            test_cond = dp['test_condition']
+            X_train, y_train, _ = _prepare_decoding(
+                epochs[train_cond], self.condition_a, self.condition_b
+            )
+            X_test, y_test, _ = _prepare_decoding(
+                epochs[test_cond], self.condition_a, self.condition_b
+            )
+            scores = decode_generalization(
+                X_train, y_train, X_test, y_test, **dp)
+        else:
+            # Normal CV decoding
+            X, y, sample_weight = _prepare_decoding(
+                epochs, self.condition_a, self.condition_b)
+            scores = cv_decode_generalization(X, y, **dp)
+
+        self.data_ = np.array(scores)
         self.shape_ = self.data_.shape
+        del epochs
 
     @property
     def _axis_map(self):
         return OrderedDict([
-            ('train_times', 0),
-            ('test_times', 1),
+            ('folds', 0)
+            ('train_times', 1),
+            ('test_times', 2),
         ])
 
 
@@ -290,3 +324,16 @@ def _prepare_y(epochs, condition_a, condition_b):
               np.ones(condition_a_mask.shape[0])]
 
     return y, condition_a_mask, condition_b_mask
+
+
+def _prepare_decoding(epochs, condition_a, condition_b):
+    y, condition_a_mask, condition_b_mask = _prepare_y(
+        epochs, condition_a, condition_b)
+    sample_weight = _prepare_sample_weights(
+        epochs, condition_a_mask, condition_b_mask)
+    X = np.concatenate([
+        epochs.get_data()[condition_b_mask],
+        epochs.get_data()[condition_a_mask]
+    ])
+
+    return X, y, sample_weight
