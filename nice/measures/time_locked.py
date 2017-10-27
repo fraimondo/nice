@@ -277,7 +277,8 @@ class GeneralizationDecoding(BaseMeasure):
                 epochs[test_cond], self.condition_a, self.condition_b
             )
             scores = decode_generalization(
-                X_train, y_train, X_test, y_test, **dp)
+                X_train, y_train,
+                X_test, y_test, **dp)
         else:
             # Normal CV decoding
             X, y, sample_weight = _prepare_decoding(

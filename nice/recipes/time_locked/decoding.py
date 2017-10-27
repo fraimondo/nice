@@ -49,11 +49,15 @@ def _check_clf(clf, cv, class_weight, random_state):
 
 
 def cv_decode_sliding(X, y, clf=None, cv=None, class_weight=None,
-                      scoring='roc_auc', random_state=None, n_jobs=-1):
+                      scoring='roc_auc', random_state=None,
+                      picks=None, n_jobs=-1):
 
     clf, cv = _check_clf(clf, cv, class_weight, random_state)
 
     se = mne.decoding.SlidingEstimator(clf, scoring=scoring)
+    if picks is not None:
+        logger.info('Picking channels')
+        X = X[:, picks, :]
     scores = mne.decoding.cross_val_multiscore(se, X, y, cv=cv, n_jobs=n_jobs)
 
     return scores
@@ -61,19 +65,24 @@ def cv_decode_sliding(X, y, clf=None, cv=None, class_weight=None,
 
 def decode_sliding(X_train, y_train, X_test, y_test, clf=None,
                    class_weight=None, scoring='roc_auc', random_state=None,
-                   n_jobs=-1):
+                   picks=None, n_jobs=-1):
 
     clf, _ = _check_clf(clf, None, class_weight, random_state)
 
     se = mne.decoding.SlidingEstimator(clf, scoring=scoring)
+    if picks is not None:
+        logger.info('Picking channels')
+        X_train = X_train[:, picks, :]
+        X_test = X_test[:, picks, :]
+
     se.fit(X_train, y_train)
     scores = se.score(X_test, y_test)
-
     return scores[None, :]
 
 
 def cv_decode_generalization(X, y, clf=None, cv=None, class_weight=None,
-                             scoring='roc_auc', random_state=None, n_jobs=-1):
+                             scoring='roc_auc', random_state=None, picks=None,
+                             n_jobs=-1):
 
     clf, cv = _check_clf(clf, cv, class_weight, random_state)
 
@@ -81,19 +90,26 @@ def cv_decode_generalization(X, y, clf=None, cv=None, class_weight=None,
         cv = StratifiedKFold(cv)
 
     ge = mne.decoding.GeneralizingEstimator(clf, scoring=scoring, n_jobs=n_jobs)
-
+    if picks is not None:
+        logger.info('Picking channels')
+        X = X[:, picks, :]
     scores = mne.decoding.cross_val_multiscore(ge, X, y, cv=cv, n_jobs=1)
     return scores
 
 
 def decode_generalization(X_train, y_train, X_test, y_test, clf=None,
                           class_weight=None, scoring='roc_auc',
-                          random_state=None, n_jobs=-1):
+                          random_state=None, picks=None, n_jobs=-1):
 
     clf, _ = _check_clf(clf, None, class_weight, random_state)
 
     ge = mne.decoding.GeneralizingEstimator(
         clf, scoring=scoring,  n_jobs=n_jobs)
+    if picks is not None:
+        logger.info('Picking channels')
+        X_train = X_train[:, picks, :]
+        X_test = X_test[:, picks, :]
+
     ge.fit(X_train, y_train)
     scores = ge.score(X_test, y_test)
 
