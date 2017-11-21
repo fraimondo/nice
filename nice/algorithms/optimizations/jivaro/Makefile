@@ -42,7 +42,7 @@ UNAME = $(shell uname)
 MACHINE = $(shell uname -m)
 
 ifeq "$(UNAME)" "Darwin"
-	CC=icc
+	CC?=icc
 	CFLAGS = -Wl,-no_pie
 	LDFLAGS= $(MKLROOT)/lib/libmkl_intel_lp64.a $(MKLROOT)/lib/libmkl_core.a $(MKLROOT)/lib/libmkl_sequential.a  -openmp-link static
 endif
