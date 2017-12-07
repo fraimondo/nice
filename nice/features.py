@@ -171,6 +171,8 @@ def _get_reduction_params(measure_params, meas):
         part = full.split('/')[0]
         if part in measure_params:
             out = measure_params[part]
+    if len(out) == 0:
+        raise ValueError('No reduction for {}'.format(full))
     return out
 
 
