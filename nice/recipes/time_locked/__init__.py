@@ -20,3 +20,5 @@
 # License version 3 without disclosing the source code of your own applications.
 #
 from . classical import epochs_compute_cnv
+from . decoding import (cv_decode_sliding, decode_sliding,
+                        cv_decode_generalization, decode_generalization)
