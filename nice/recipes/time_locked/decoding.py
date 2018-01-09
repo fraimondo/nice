@@ -17,7 +17,8 @@
 # You can be released from the requirements of the license by purchasing a
 # commercial license. Buying such a license is mandatory as soon as you
 # develop commercial activities as mentioned in the GNU Affero General Public
-# License version 3 without disclosing the source code of your own applications.
+# License version 3 without disclosing the source code of your own
+# applications.
 #
 
 from sklearn.model_selection import StratifiedKFold
@@ -31,7 +32,8 @@ from mne.utils import logger
 
 def _check_clf(clf, cv, class_weight, random_state):
     if clf is None:
-        logger.info('Using default Pipeline (Standard Scaler + Linear SVC C=1)')
+        logger.info(
+            'Using default Pipeline (Standard Scaler + Linear SVC C=1)')
         scaler = StandardScaler()
         svc = SVC(C=1, kernel='linear', probability=True,
                   class_weight=class_weight,
@@ -89,7 +91,8 @@ def cv_decode_generalization(X, y, clf=None, cv=None, class_weight=None,
     if isinstance(cv, int):
         cv = StratifiedKFold(cv)
 
-    ge = mne.decoding.GeneralizingEstimator(clf, scoring=scoring, n_jobs=n_jobs)
+    ge = mne.decoding.GeneralizingEstimator(
+        clf, scoring=scoring, n_jobs=n_jobs)
     if picks is not None:
         logger.info('Picking channels')
         X = X[:, picks, :]

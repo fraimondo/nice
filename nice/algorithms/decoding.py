@@ -17,7 +17,8 @@
 # You can be released from the requirements of the license by purchasing a
 # commercial license. Buying such a license is mandatory as soon as you
 # develop commercial activities as mentioned in the GNU Affero General Public
-# License version 3 without disclosing the source code of your own applications.
+# License version 3 without disclosing the source code of your own
+# applications.
 #
 import numpy as np
 
@@ -94,16 +95,23 @@ def decode_window(X, y, clf=None, cv=None, sample_weight='auto', n_jobs='auto',
             n_jobs = 1
     if clf is None:
         scaler = StandardScaler()
-        svc = SVC(C=1, kernel='linear', probability=True)
         transform = SelectPercentile(f_classif, 10)
-        clf = Pipeline([('scaler', scaler), ('anova', transform), ('svc', svc)])
+        svc = SVC(C=1, kernel='linear', probability=True)
+        clf = Pipeline([('scaler', scaler),
+                        ('anova', transform),
+                        ('svc', svc)])
 
-    if cv is None:
+    if cv is None or isinstance(cv, int):
+        if isinstance(cv, int):
+            n_splits = cv
+        else:
+            n_splits = 10
+
         if labels is None:
-            cv = StratifiedKFold(n_splits=int(min(10, len(y) / 2)),
+            cv = StratifiedKFold(n_splits=int(min(n_splits, len(y) / 2)),
                                  shuffle=True, random_state=random_state)
         else:
-            cv = GroupKFold(n_splits=10)
+            cv = GroupKFold(n_splits=n_splits)
 
     if isinstance(sample_weight, str) and sample_weight == 'auto':
         sample_weight = np.zeros(len(y), dtype=float)
