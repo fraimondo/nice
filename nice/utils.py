@@ -114,7 +114,7 @@ def mne_epochs_key_to_index(epochs, key):
                 # Select a given key if the requested set of
                 # '/'-separated types are a subset of the types in that key
                 key = [k for k in epochs.event_id.keys()
-                       if all(set(k_i.split('/')).issubset(k.split('/'))
+                       if any(set(k_i.split('/')).issubset(k.split('/'))
                               for k_i in key)]
                 if len(key) == 0:
                     raise KeyError('Attempting selection of events via '

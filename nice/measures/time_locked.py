@@ -228,6 +228,8 @@ class TimeDecoding(BaseMeasure):
             X_test, y_test, _ = _prepare_decoding(
                 epochs[test_cond], self.condition_a, self.condition_b
             )
+            dp = {k: v for k, v in dp.items()
+                  if k not in ['train_condition', 'test_condition']}
             scores = decode_sliding(X_train, y_train, X_test, y_test, **dp)
         else:
             # Normal CV decoding
@@ -276,6 +278,8 @@ class GeneralizationDecoding(BaseMeasure):
             X_test, y_test, _ = _prepare_decoding(
                 epochs[test_cond], self.condition_a, self.condition_b
             )
+            dp = {k: v for k, v in dp.items()
+                  if k not in ['train_condition', 'test_condition']}
             scores = decode_generalization(
                 X_train, y_train,
                 X_test, y_test, **dp)
